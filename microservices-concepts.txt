@@ -1,0 +1,157 @@
+- Microservices meaning breaking down big code base into independnet deployable units based on functionlaity/domain
+	-> each of these service can communicate with light weight protocols like http
+advantages:
+- helps in productiveness of devleopers/ new dev joining can pick things quickly
+- deloyment can be done quicker with time
+- auttoscaling can be done independently
+- auto deployment automatically
+- paralle devlopment can happen for a lot of functionlaities
+- each service can be based on best possible language and D.B and other implementation techniques
+- helps in implementing changes quiclky and less testing is needed
+- imporoves fault tolerance , in case of monolith if app goes down all the application goes down but here we can have fault tolerance based on if that specific service is down or not
+- improves hardware cost  -> only service whihc are high io we cna execute on that kind of hardware -> helping us to reduce hardware cost
+
+Server side load balancing: Along with service instances (autoscalable) we have a load balancer
+	client will call this and load blancer(like ELB in aws) calls the individual service making it two calls even for a single clal
+-> this resulted in client side load balancing that uses service registration/discovery
+-> each service will have list ips of service to call using eureka/service registry and client decided whihc one to go and hence reducing the call by one
+
+Benefits of client side load balancing over server side
+- improves performance as client directly calls the service and do not use server side load balancer
+
+Examples of discovery server:
+a. eureka
+b. consul
+c. zookepper by apache
+
+- ribbon can do retrying also in case local cahced instance is actually down as max 120 second can be downtime for one instance of a service
+	-> this retry will ensure that it goes to another instance of service and hence there is a chance that other is up
+	-> if all instances are down then we need to return some default value using hystrix circuit breaker
+- ribbon client load balancer helps in calculating the average times of response from each service and put in cache so that weighted algo can find whihc instance to call
+	-> first time it will be rounbd robin then it keeps on creating average response time for each instance and later on uses this data to clacualte which instance to call
+
+Bulkhead pattern:
+divede thread pools among services and hence if one is slow number of thereads assigned for other services will not be impacted
+- > hystric can implement circuit breaker pattern and bulkahead pattern both
+
+circuit breaker:
+when everything is going good curcuit is closed and service 1 is calling sergice 2
+-> once service 2 gets timed out we keep on incremenitng the count of failueres -> s1 calls s2 failure count increases and s1 return default/cached value to its client
+-> this will happen until threshold percent is reached -> once reached it opens the circuit and then all calls to s2 will blocked until sleep time is over
+		-> it retruns vlaue from local cahce/default and until sleep time is over it keeps on returning default value
+
+API gateway:
+- acts as entry point for external clients, interservice communcation need not happen through it , that can happen directly
+- since ip of services might change in cloud based application we need some one whohc can do reverse proxy
+benefits:
+- reverse proxy
+- rate limiting, like how many services can be allowed for users in a given time
+- throttling
+- secturty features
+- load balancing using reibbo and do routing based on eureka
+- lets say we want to expose only few of services we can give the route rules to allow only thos service to clinet
+- static content
+- aggregator -> one request neededing multiple api calls
+- hystrix circuit and bulkhead pattern
+- loggin/tracing
+
+Spring integration : 
+This hleps in introducing logical connection bwetween clinet and server,
+lets say we have one clinetn and one server connecting via soap service
+	-> it is loosely coupled meaning change in one place do not affect other untill wsdl contraact is fllowed
+	-> however if the communication method cahnges form soap to rest our code has to eb modified
+Spring integration provides a commnon channel that hels us adpt and integrate with different third party integrations
+	-> how it does is it creates in memory queue and our job in code will be to just create a serialzble class and call the method of integrator that puts the data ina  queue in memory,
+	-> we can configure throught externilzied config(indepenednt of code) to setup adapter that takes data the queue and conevrt to usable format of thirsd party server.
+Eg is spring cloud config
+-> if there are different ways of brokers like kafka , rabbit mq
+	-> this mechaniss is built on top of sprin integration
+	-> we have to just provide the message and put in memory queue , configured adapter (eg one for rabbit, one for kafka, one for kinesis) picks it and convert to its desired output
+	-> and send this message ot broker, this helps in server implementation may change but from client side no code change , only config changesare needed
+----- This is how ESB also works it allows us to integrate between differnet technologies cliet/server connect together and any change in cleint and server wont affect each other
+	-> as the conversion of format is taken care by ESB- >renterprise service bus
+--Spring integration is example of EBS
+- This allows to write a code in common way so that server can either be SOAP service, or rest service or Data base , in configuration we can decalaravive setup the server
+
+Steps in Domain driven design
+- First identify the business problem space
+- Identitfy the domains and subdomanis
+- within subdominas identify the aggregate object(whihc is root of that specfic functionaloty of subdomain) and entities(child items of agreegate)
+- in monilith for each subdomain we have code for all aggregate and entities in same code base
+- in microservice we will identify the spaces/sagas/business rules for each of these aggregates and keep them isolated
+- each of these entitities and aggregates can interact using rest
+- identify the busniess rules/saga for each agggregate and find the commands(methods to updat ethe aggreagate and its object) and queries
+
+importnant points in DDD implementations:
+- use embeded even for values in aggregator : eg amount -> do not [put directly in order aggreagate object instead use embedable and embeded -> loose coupling and flexibility
+- use DTO for Rest api reuqest and use a sepearete business service to convert to DAO class
+- as part of DDD once a aggreagate object is publichsed in DB we moight have to send event,
+	so  for each object first find operations/commands(change the state), queries and events
+	for each of oabove these create differnet service impls
+- once aggreagate object is created in consructor we should register object as a message in a in memory event ,assign transationalListnere to these 
+	-> if DB transation fails in service impl the vent will be ignored
+- use messaging sreams using differnet channel for each even type
+- tyoe s of service impls
+	a. query service impl for entties and aggregator object , -> will have only filtering / querying of objects present in DB
+	b. command service inpl : have methods related to things that change state of aggregator
+	c. events : shud have transactionalListenre annotated methods calling indivusla cloud stream channels for sending events to rabbit/kafka brokers 
+	-> aggreagtor object constructor shud register the evne and once transaction completes in memory transaction listenr can pick the aggreagate objec and send mesage to broker
+- Class that populates the message recieved from message broker as part of listern events should transfor to another bean specific to that domain service
+	-> this is called Anti corruption layer.
+	in future if message instance variables are changed in prodcuer it do not affec the consumers bean
+
+- maven by default support single parent dependencies using parent tag
+- however we cna use dependencymangement tag to add new depenency versions and just add dependency in dependency tag -> using scope import and type as pom
+
+Eureka 
+Even though eureka goes down it is not single point of failure as by default each eureka client have locaal copy
+- also using ribbon in case local cache is old and eureka is stil not up we can retry tp another instance
+- if still it can go to fallback using fault tolearance
+- eureka by default expects a cluster of instances working togehter in cloud
+so we have to skip the self registry for each eureka instance-> in cloud on each AZs we can have its own local eureka instance for performance concerns
+-> thse instance for high availability keeps trakc of registry from another one, thats why in case of single instance eureka we need to skip the slef registry
+
+If we need to have a cluster of eureka server we can insert ip of one of the instance in another instance
+-> this way they communicate with each other to fetch others registry and hence intrdouced high availability
+
+In eureka client we need to add client dependency and then add eureka client service urls for each zone
+	, if single instance is there put key as defaultZone
+jobs of registry client::
+a. register on startup
+b. send heartbeat to server
+c. fetches latest registry list from server to put in cache
+d. Everytime one of the clinet instance is shutdown it send a call to server that i am getting down and hence eureka registry will be updated
+- eureka server do not deregisters from its registry list on just one missing heat beat
+	-> it do it after 3 consecutiry attemps in failed heat beat
+	-> however on shutdown manually by server unless force kill , client send kill event and hence registry is removed from server
+- when machine gets killed due to overuse then eureka cloient wont be able to send deregistration event and hence till 120 seconds there is a chance
+
+Types of Calls bewtween eureka server and client:
+a. GET call : list of all the registered API for the first time
+b. GET delta: Betwen lat 30 seconds it provides registera api list
+c. POST: Registration event at server startup from client
+d. PUT: Heart beat call from cleint to server
+e. DELETE: Once we shutdown the instance manually and gracefully it sends this so that server can deregister the instance from list:
+ -> in case there is a force kill beacuse of service usage overload of eureka client
+	then untill 3 failed heartbeat eureka server push the instance to evicttion list and after every 60 seconds a thread runs and kill these kinds of instances whihca re marked to be evicted
+In case of force kill of eureka client -> eviction rule happens , in case of graceful shutdwon directly eureka server removes the ip from registry
+
+@enableEurekaServer : This annotation creates a markup bean and instantiates it
+-> there is a auto configure bean which is conditional ot be executed only if this amrkup bean is instantiated
+- By default eureka server is both client and server , Client tries to register to another cluster of eureka(for high availability) -> in case of single instance it will give error
+- > to skip this error we can to skip the flag of registration in eureka server whwn there is only one instance
+- >if there are cluster of instances of eureka we can add this in list for each of the instances
+
+Server part of eureka serve looks for registry details and heart beat from its client and provides the list of registry once another client asks for it
+
+eureka self preservation mode of eureka server: In case a lot of heart beats are not reaching ., if it reaches more than 15 percent , 
+ once if the flag is set to true (default vlaue) and in case 15 percent of total instances goes to eviction mode then it means there is ome netwrok issue
+as on production this is not possible that 15 percent of instance is donw specially in cloud
+
+-> so if the flag is true (default value) and eviction count goes more than 15 percent of total then it enter the self preservation mode and hence it do not kill any of the registry till some time beeing
+- on prod this shud always be true in lcoal or dev we can make this as false so that we cna amke some space
+
+While creating clustered peers of eureka we need to do following
+- we need to make register to false for all three instance of eureka
+- we need to maeke fetch registry as true for all three
+- and for each one of them the service url for client to fetch registry data we shud set as other two instances
