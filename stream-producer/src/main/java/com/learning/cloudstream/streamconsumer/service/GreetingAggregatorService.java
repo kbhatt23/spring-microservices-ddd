@@ -7,17 +7,18 @@ import org.springframework.web.client.RestTemplate;
 
 import com.learning.cloudstream.streamconsumer.bean.Greeting;
 import com.learning.cloudstream.streamconsumer.bean.ddd.aggregator.GreetingAggregator;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 @Service
 public class GreetingAggregatorService {
 	@Autowired
 	private GreetingCommandService greetingCommandService;
 	
 	@Autowired
-	private RestTemplate restTemplate;
+	private IDGeneratorService idGeneratorService;
 
 	public GreetingAggregator populateGreetingAggregator(Greeting greeting) {
-		ResponseEntity<Integer> greetingIdResponse = restTemplate.getForEntity("http://id-generator-service/generate", Integer.class, new Object[] {});
-		int greetingId = greetingIdResponse.getBody();
+		int greetingId = idGeneratorService.generateId();
 		GreetingAggregator greetingAggregator = new GreetingAggregator(greeting.getMessage(), greetingId);
 		greetingCommandService.createGreeting(greetingAggregator);
 		return greetingAggregator;
@@ -25,5 +26,5 @@ public class GreetingAggregatorService {
 	public GreetingAggregator findGreeting(int id) {
 		return greetingCommandService.findGreeting(id);
 	}
-}
+	}
 

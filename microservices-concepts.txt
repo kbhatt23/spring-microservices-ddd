@@ -155,3 +155,100 @@ While creating clustered peers of eureka we need to do following
 - we need to make register to false for all three instance of eureka
 - we need to maeke fetch registry as true for all three
 - and for each one of them the service url for client to fetch registry data we shud set as other two instances
+
+- By default even without ribbon dependency addition load balanced rest template uses it by defautl and uses round robin algo
+- for custom algo we need to introduce the ribbon depenedency
+@ loadBalacned annotation on resttemplate adds an interceptor that runs a logic and uses loadblacnedclient service to find the correct ip based on algo-
+- internally uses loadbalancedclient instead of discovrey client to pass service name and get ip and port combination
+- However in kubernetes we will get only the ip based on passing the service name and port is not provided by service discovery
+
+So basic fundamental of riboon is to provide an interceptor on resttemplate/feign client level 
+- which will gets exectued before each rest call to third party which are configured to eb enabled in ribbon config in application.proeprties
+- we can set timeout, total retry timeout, retry count total, retry count total per instance etc, enable/disable ribbon based on service name
+- to enable retry in ribbon load balancing intercepto we need to introduce spring-retry dependency -> in our case it was already present as we added spring cloud stream dependency
+
+- Ribbon by default picks alls the list of ip for a service from eureka, 
+	-> if we want to call a service that is not added to eureka we can set -> servicename.ribbon.eureka.enabled=false(default is true)
+		and then provide list of ips to call the third party, basically for ribbon all the condig are based on service name
+- Id we are setting up cluster of eureka each one of them have same extra copy, if we want to fetch from only one zone
+	-> We need to confifure ZoneavaiableLoadBlancer- > implenentation of ILoadBalancer -> this class hav method to provide list of ips, based on eureka or non eureka
+	-> We can customize the algo to do load balancing using implementaiton of IRule interface
+	-> we cna create Ribbon client annotation and pass custom config based on service name
+	-> eg one service need wighter other one different so we cna create config classes for each service and add @ribbonClient -> pass the name of service and its config class
+
+- hystrix uses AOP that is based on reflection form java
+- hystrix uses hystrixcommand proeprty to create proxy of class and hence it will call this wheneven an exception occurs.
+- Whena  method in the same class calls another method whihc have hystrixCommand annotation it wont work as proxy wont be created and referred for the same class
+-  we can set configproperties in application.properties for each circuit based on commandkey
+- hystrix uses buckets to handle different slots of success/failure count -> if this was not the case after 1 hour whene there is so much success count percentage of failure will alwasy be less than threshold
+	-> this bucket refreshes every 10 seconds and this can be configured , total bucket size is 10 and can be configured
+- default propety of hystrix commands and properties can be set in one place in application.properties
+	-> if we want to haev some different value form few of them we can overrdide them in application.proeprties
+	- > hystrix.thread.commandkey.proeprty
+		-> hystrix.property.comandKey.property=
+- for proeprties we use commandkey as identifier and for threadpool proeprties(bulkhead pattern) we use threadpoolkey
+- bulkhead pattern: instead of directly consuming threads of tomcat lets divide number of threads and create new custom threads to call the apis/DB
+	-> to skip this we can use isolation.strategy s semaphore (default is thread meaning seperate thread)
+	-> it will call using same thread and hence we wont be able to divide threads among services
+
+Turbine:
+It is used in conjunction with hystrix dashboard: 
+	>  a hystrix dashboard can be used to read hystrix metrics using hystrix.stream actuaator of apis
+-	> we create anew application with hystrix dashboard dependnecy
+	-> we add actualator and allwo hystrix.stream actuator endpoint in services using circuit break modules
+	-> we give this path in dashboard and we cna see metrics
+- Turbine is likea  cluster that can help us see the hystrix metrics of all the services(configured)
+	- > it picks the list from eureka by becomming eureak client
+- hystrix fallback method gets called on any exfeption
+	-> for ex db call then rest call , even though we want fallback only during rest api call
+-> we can provide ignore list of excpetions
+-> better to use feign client whihc integrates with eureka, ribbon, hystrix, sleuth , zipkin etc
+
+- Spring cloud config is a way of externalizing the config
+- Using this we can keep config of all the services at one place
+- also at runtime we can modify the value and after calling refreshscope it will reflect on those server at runtime
+- we can keep application.properties in config server for the proeprties whihc are common to all the service , also based on profile we na override it using application-dev.properties
+- in config server we can keep service specific configuration in file using serviceappliationName.properteis and for profile based application-dev.properties and so on
+- if no profile is appased first it picks application.ym and then the servicename.properties
+- in case of profile first it picks apploication.properties then application-profilkename.proeprties and then service.properties and service-profile.propetteis and pass the json to config client
+- -  We cna use git,sv,db ,file system to manage the config values
+
+-  we need to remae the application.proeprties to bootstrap/properties and keep only application.name and cloud config client proeprties in client services
+-> move everything else to config server common place using file name as serviceName-profileName.properties
+- config client fetches latest properties from config server(whih is always updated) and puts in caceh for performance reasons
+	-> if on rutoime it si added dynamically we need to call refresh actualtor endpoint -> add actualtor dependecny in config client and add web exposure include for refresh endpoint
+@refreshScope provided a refrehs of properties only in that bean -> it is nothing but a new scope
+	-> when we call actualtor refresh it just refreshed the properties but the bean whihc are singleton do not gets updated
+	-> for these for each bean whihc is using config properties in clinet we need to add refreshscope
+
+- In case there are multiple instances of config client doing actuator/refresh will do refresh proeprties only on those instances
+-> so we can use a bus framework called spring cloud bus
+	-> this uses rabbit mq stream by default
+	-> once we allow /bus-refresh actuator endpoint and in config client provides rabbit mq details like host port etc
+	-> if we call the bus refresh at any one instance it will put the message in a exchange of rabbit mq with name springcloudbus(default)
+	-> all the other instances will be listned to this queu and the type of exchange will be fanout so all the queues will pick this message whihc are linked to springcloudbus
+	-> hence the new config proeprty will be reflected to all the instances of config client service
+
+
+=========event sourcing========
+- In domain driven system each bounded context change notifies an envent to another bounded context, 
+	- event source says we should store the list of events recieved on each changes in another system
+	-> This can help in creating utility function in case of data courruption to create the whol aggreagate object by applying these events one by one
+	-> each event will have command we cna execute this set of commands on data and that can give us latest state of aggregate object
+
+CQRS -> Command query segregation System
+ - Generally in DDD we will have different bounded context each having aggregrate objects
+	-> each command is the event of updating the state of aggregate object
+	-> each query is the view/query for state of these objects
+-	We know that there will be a lot of read requests and also since we generally have data segregated in different tables/views -> joining will be need in querying
+	-> this reduces the performacne of reading in application
+- CQRS design patterns says  lets seggregate the command and query part into teo differentr application
+	- > in each comamnd request we can update the data in D.B of command application and on transactional in memeory listerner we cna send message to broker
+	-> this broker can be listened by Query application that have simple table that do not need joining,
+	structure of table in read application can be based on how front end needs
+	-> similiarly thes same event can be listedn by reportining tools, as in microservices if reporting aggregates data from differnetn application and join from them in memory
+	->  it will be xtremelry slow- > so i the same event during command we can add a listener for reporting applicaiton 
+	-> whihc will update the tables in their own format so that reposrting query becomes faster and no need to join tbales on read
+
+- Also CQRS is also combined with event sourcing where we do not even keep data base in command application ->  we just send message to report and query applications
+	-> both can act as event source and on read we can apply all the events in event soruce to get the latest state of aggregate obbject
