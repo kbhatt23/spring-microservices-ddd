@@ -252,3 +252,27 @@ CQRS -> Command query segregation System
 
 - Also CQRS is also combined with event sourcing where we do not even keep data base in command application ->  we just send message to report and query applications
 	-> both can act as event source and on read we can apply all the events in event soruce to get the latest state of aggregate obbject
+
+Axon is a framework that supports CQRS and event sourcing
+- > flow
+- We seperate Command and Query applications 
+- On command application from controller we create an event and we push the event to Axon queue(internally using rabbit/kafka)
+	-> once we send the command , the axon will call the aggregate and look for @comandHandler annotated method of same command object type
+	-> from there we can create aggreagate object and pass it to eventSourceHandker annotated method
+	-> from there it calls event queue of Axon tool, Where it store the event on D.B like h2
+- On query application
+	-> aggregate object will be looking for event soruce from axon -> uses the same @eventSorucehandler annotation
+	-> there we can create an object(entity of jpa) and persist in db
+	-> controller can directly pick the latest state of acocung directly form jpa(its own D.B structure that can be flezible as per need)
+	-> also we can get list of exvents based on id of account/aggregate object -> useful in case of data courruption
+	
+	
+
+Axon have 2 queues -> one for ocmmand -> command app will publiush from controlelr to this and directly bypass data poersistence
+	-> axon will call the @commandhandlker annotaed method of aggregate grom there we can call event source and publish to axon event que
+	-> Query app  will be looking for these events source using @eventsourcehandler annotated methods and will save in DB, -> we can use axon api to get data and save in jpa
+	-> Controler will still pick data from jpa repo
+	-> we cna also query for all the events based on id fo the event -> useful in case of data corruption
+
+Docker command to run axon server:
+docker run -d --name axonserver -p 8024:8024 -p 8124:8124 axoniq/axonserver

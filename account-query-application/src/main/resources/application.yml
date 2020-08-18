@@ -1,0 +1,7 @@
+server:  port: 6667
+
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
