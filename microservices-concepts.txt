@@ -2,7 +2,7 @@
 	-> each of these service can communicate with light weight protocols like http
 advantages:
 - helps in productiveness of devleopers/ new dev joining can pick things quickly
-- deloyment can be done quicker with time
+- deployment/development can be done quicker with time
 - auttoscaling can be done independently
 - auto deployment automatically
 - paralle devlopment can happen for a lot of functionlaities

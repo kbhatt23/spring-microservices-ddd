@@ -1,0 +1,333 @@
+we need to learn the evolution of software architechture to fully understand microservices and cloud native applications
+evolution of software architechture happens to fix disadvantages of earlier archtitechture and adding newer system desin principles/patterns
+
+overall evloution that we should learn:
+eg : monlith -> soa -> microservices -> event driven services
+
+=======monolith========
+- all the functionlaity code exist in single code base -> making it tough for maintainance and understanding by newer developer
+- ui code, back end code, service code, d.b integration code all exist in single code base
+- whole application is packaged as jar/war and runs all together in single server/container
+- very time consuming deployment process and develoment become slower, very hard to implement new features
+
+when to use monlith architechture
+- when our business functionality set is simple and basic and straightforward
+- when we do not need huge scalability, relaibility, availability, we can reduce netwrok latency
+since we do not expect huge number of users/request load increase for future and want cheaper solution then we can go for monolith architechture
+
+advantages:
+- since it is single code base importing project do not need huge documentation and steps and easier to start with
+- also since all functionality code exist in single code base it is easier to debug and test, no need to view logs/trace among multiple apis
+- to handle microservices architechture we need devloper/archictecht/devops etc of greater skills where as in monolith these skills are easier
+- network latency is lesser as there is internal all of methods and not among microservices which have netwrok latency
+
+disadvantages
+- with time when more code/functionlaties are added it becomes very toguh for understanding for newer developer
+- adding newer features becomes time consuming
+- can not use tech stack based on functionality , as adding one tech stack put load on whole application
+- independent horizontal scaling is tought
+- single point of failure if application is down means all functionalities wont work -> low resilience
+--adding to new tech stack means we need to rewrite whole application and will be time consuming, we can not move patch by patch as everything is packaged into single war/ deployment unit
+
+-- remeber we can use horizontal and vertical scaling both in case of monolith but that is very costly and is of less usage
+	also we can not scale different functionalities seperately
+- boot time will be very huge and hence scaling up will take time and hence may loose some importatnt request like payment/order etc	
+	
+-- loadbalancer like haproxy and nginx are server side load balacning client need not to do anything just call a single url of loadbalancer server
+		but it can be slow as there will be 2 netwrok call for a single client network call
+	client side load balancing is tough to implement where client need to know all instannces of cluster nodes but have single network call and hence better netwrok latency	
+	
+	
+
+====SOLID principle in system design/software architechture
+a. Single responsiblity: each layer/module should have clear separation of concern to increase cohesion and remove tight coupling
+	ineach microservice have seperate responsibility to modify ,increases reusability , and modification time will be faster
+		do once reuse at other services as well
+b. open closed principle : adds loose coupling and adds cohesion
+			eg we are using spring cloud stream, we can plug in and play different brokers like rabbit mq, kafka
+			no code changes just some config change and we can plug and play different brokers,
+c. liskov substritution principle: same as spring cloud stream
+d. interface segregation principle : same as spring cloud stream
+e. dependency inversion principle: do not depend directly on another microservice , add loose coupling by using event driven systems
+
+
+layered architechture means layer the back end and front end into modules
+	like MVC : it is basic example of layered architechture, but front end and back end still remains in same war fike
+	
+====SOA
+service oriented architechture works on top of layered architechture
+		we decouple front end and back end , front end calls back end via netwrok call
+		also the back end and front end systems are modularised like divided into sub projects like order service, user service
+		each service divides using segregation of service/business/controller/DAO classes etc
+		but remeber all the services are still kept in same code base like using atg rest projects
+		advantage is front end and back end technologies are loosely coupled they can be plud in and payed by changing to newer tech
+		only thing is there should be a contract b/w front end and back end that should not break thats it -> 
+		
+SOA adds usage of ESB, acts as a middleware b/w interaction other different services, it adds cros cutting concerns like security, authentication, authorization ,routing etc
+eg we just tell the api name in client , based on this name it redirects to the service
+it can cause a bottleneck as single point of failure and tougher to implement on ESB side
+hugely uses SOAP as part of ESB		
+		
+
+===-=-=-=SOA vs microservices-=-=-=-=-=-=-=-=-
+- common thing is that both allows functionalities to be exposed as api over network, decoupling front end and back end technologies	
+	we can plug in and plug out both front and back end tech stack but ensure contract b/w client and server do not breaks
+- service size : SOA contains huge chunk of code in single service and whole project contains only few indepdent services as most code sit in these huge chunk of monoliths
+			however microservices are extremely fine grained and lesser in size , typically project contains hundreds of microservices
+- interservice communication: in soa interservice communication happens via ESB (middleware that do cross cutting concerns like auth,Oauth,monitoring,routing) making them bottleneck and huge depdency
+				also communication protocol is very heavy like SOAP to help coding become easier and common across all services
+			in case of microservices inter communication happens directly via light wight protocols like rest , grpc , graphql or events
+- db : in soa one single huge d.b is shared across all services , but microserviec have d.b per microservice
+- 
+-=-=-=-microservice -=-=-an enhancement on top of SOA
+- small indepdent services having clear set of functionaoloies -> segregation of concerns -> bounded context
+	each api having its own set of resposiblity -> increases reuability, faster deelopment and bug fixes, cost effective in development, reusable solutions and loosely coupled high cohesive
+all these microservice have fixed set of responsiblilties and work together to solve bigger business problems
+- seperate codebase
+- can use their own D.B each service
+- can deploy scale and fail indedpendently
+- can use their own tech stack	
+- communicate over well defined apis using light weight protocls like rest, grpc, graphql etc
+
+-- disadvantages of microservies
+- huge management complexity : indepdent services are clear but combination of all solving whole problem is quite complexity
+- need to train dev/qa/infra to adapt to microservices challenges
+- netwrok latency as in monolith communication is within same process, fault tolerance as netwrok error can occur
+- tougher to debug any bug as need to trace logs across apis
+- transaction across distributed systems
+
+advantge of keeping indepdent code base for each microservice: in case code commit of one dev causes issue in buikld and deployment , only dev working on that microservie will get impacted
+other microservice dev can work with no concern
+- databse per service design pattern -> to make all service loosely coupled meaning as less as depdent on other service we keep d.b seperate for all
+as self depdent as possible
+we can scale d.b based on specific microservice as some microservice have more data to handle
+benefits overall
+- can choose service specific d.b like some servie is good with mongo or other with sql
+- can scale d.b of each service indepdendlty as some service has more data and others have less amount of data
+- data loss in one d.b will affect only that specific microservice and wont affect others
+- service can read data from d.b of other serviec only through api call this adds data security and integrity and ownership
+
+----inter service communication in microservices-----
+
+sync communication : client waits for server reponse and can not do anything , is blocking, 
+	in microservices client has to wait ofr all the network calls from first microservice till all other dependent microservice
+eg: http rest, graphql, grpc
+async : client do not wait for all the tasks to be done by server or first microservice api, lets use event bus
+		base of event driven microservice or also can use streamsusing reactive programming library like project reactor using spring webflux
+eg: webflux, event driven system using kafka/event bus
+- typically microservice uses combination of sync as well as async inter service combination strategy based on use case
+  eg: adding to cart, fetching the price, then call discount api need to be sync
+	but order placement steps like creating order, stock down, payment, billing, api calls need to be async and also transactional
+	
+	event driven microservice means inter service communcation happens via event bus making sure even if server is down later on once it is up the action is still performed
+	problem/disadvantage is looking into code we can not guess what all apis are called for  a specific request until monitoring/capturing logs are added
+	in normal req/res model in code itself we can see another api/service getting called
+
+--microservice communcation pattern -> api gateway------
+- api gateway helps in implementing microservices architechture pattern for the external world : client -> services
+
+what if client calls individual services directly
+- in microservice 100s of indepdent service exist, client have to manage to interact with these many apis thats too much
+- in case for one page multiple services are to be called client have to do n network calls / aggregation
+- adds too much responsibility and complexity in ui clients -> can be bottleneck
+- in cloud system the ip of apis changes it will be very tough for client to maintain service registry/ 
+		segregation of concern breaks as front end also working for infra functionalities
+- cross cutting functionalities like authentication/autorization/secutiry patch update/ logging/metrics/rate limiting/caching/static content have to be done in each microservice indepdently making them heavy weight whihc takes mroe boot time
+- we an cache the apis response in api gateway
+- we can keep static content also in api gateway
+- in aggregator pattern since api gateway remains within cluster of services n netwrok call will be faster than n netwrok calls from client to services
+			as client will be outside of cluster and outside of vpc
+- we can seprate list of apis that can be exposed to client (outside world) or interservice apis
+				we can keep routing rules in api gateway to not expose certain apis for front end client
+				however since inter service communcation happens directly those apis can still be called within cluster by other apis/microservice
+	
+---design patterns in api gateway:
+a. gateway routing pattern	
+b. gateway aggregation pattern: client will call api gateway once and api gateway will call n services via n netwrok calls and prepare final data fro client
+	it helps in reducing one to n integration channel complexity from client and also reduce latency(as client is external to clustern but api gateway is internal to microservice cluster)
+	
+	similar to facade design pattern, hide internal complexity and show simple single method call -> woow, hide complexisty means abstraction
+	- remember api gatway should be higly available and better make it a cluster so that it is always available to the clients
+	can become single point of failure otherwise
+	
+	features of api gateway
+	- reverse proxy/routing
+	- rate limiting
+	- authenticaton/authorization
+	- throttling
+	- load balancing + service discovery using  integration with eureka/consul
+	- caching
+	- static page
+	- aggregation
+	- logging/metric/correlation id
+	
+	- one issue with api gateway is that it can be single point of failure making it become anti pattern
+		we must ensure api gateway is higly available
+		we can use a cluster of api gateway to handle this, also known as back end for front end pattern
+		for a group of client we assign specific api gateway and we have multiple suck api gateways assignes to specific groups
+		making it a cluster of api gateways
+		
+- so far we have discussed synchronous communication in microservices architechture
+, however this is usedul when there are fewer api/services calls over network
+ in case there are a lot of api calls and it is hugely time consuming, we should use asynchronous communication using event/message bus
+
+- if we want to have multiple interserice communcation and want to loosley couple the systems we should use asyn communcation using event bus/messages 
+aka event driven microservices
+- async communication in microservice using events are an example of Depedency inversion principle
+	higher class should not directly depend on low level class , but via interface
+	among microservice this interface can be event bus like kafka or rabbit mq
+
+-=-=-=-Data base patterns in microservices/distributed systems=-=-=-=-\
+- database per service : 
+	make servive as self dependent as possible, loosely coupling microservice
+	depdency inversion, if one servie needs data from another service follow interface/contract via rest api
+	if one db fails only that service fails other service works fine
+	we can choose d.b tech stack based on microservice
+	we can scale based on load on that specific service
+- CAP theorom applies on distributed D.B , so eventual consistency vs strict consistency decision is to be made
+- D.B sharding is done for high sclability where data is partitioned and there is no duplication/deduplication
+- replica set using master/slave instances are done for high availability and durability which requires data duplication
+- in distribued systems/microservices handling transaction is complicated -> SAGA pattern
+- event driven systems also have eventual consistency as data updation across all service might take some time, eg amazon order plaement service
+	in order success page it will be eventual consistency, may temporarily show success but later on can show failed order if it fails in one of the event service like payment/stock
+	
+		
+	
+-=-=-=-=distribued databases patterns and principles=-=-==-=-=-=
+a. D.B per service pattern
+b. CQRS: command query responsibility seggregation, eventual consistency
+c. event sourcing pattern : CQRS + event bus
+d. SAGA : distributed transaction management pattern
+e. shared D.B : anti pattern 	, one d.b for all microserviec, single point of failure and breaks distributed principles
+	will cause tight coupling among microservices, schema cahnge in d.b can cause issues in other services
+	single point of failure, if D.B goes down it impacts all service ,d.B ser serice failure impacts only that specific service
+
+
+-=-=-=-types of D.Bs-=-=-=-
+SQL
+- stores data in form of table and columns making it fixed schema bounded
+- different group of data is termed as tables
+- these group of data/table can be related using joins 
+- these joining makes it tough to partition data among shards, also it makes it slower while reading
+- ACID compliant
+- have common query language known as SQL, which works fine on mutiple vendors like mysql,postgres, oracle sql, microsoft sql, maria db etc
+
+NOSQL
+- structure/schema less and hence easier to partition on shards
+- faster reads/writes as there is no relation among groups of data (tables/documents)
+- no support for complete ACID
+- easier to partition in sahrds and hence high scalability , high availability, high resilience, fault tolerance but with no ACID gurantee
+subcategories:
+a. document d.bs: stores data in form of JSON, query also happens in format of JSON eg: mongo db, dynamo db
+	no groupoing among multiple collections making it easier to partition among shards and also no join needed on reading making reads faster
+		but no acid gurantee	 , use case catalog/product data
+b. key value: stores data in form of key value, value can itself be a differetn data types as per use case
+			good for session based data like shopping cart of user. 
+			use case: shopping cart as cart have expiry and looks like session based data
+		eg: redis, dynamo db
+c. wide column data base:
+			when there are huge amount of data and we want to query way faster than normal sql d.bs we can use this
+			data query happens via columsn and all columns in rows are skipped, it search for columns only asked and unneccesarry columns/row pairs are skipped making it very fast
+			use case data warehouse/big data eq: apache cassandra, apache hbase
+d. Graph d.b : stores data in form of graphs meaning related data are joined using vertices and each node stores the data
+	eg: neo4j, no acid compliant
+	
+criteria to choose d.b for our microservice
+a. is the consistency strict/ do we want fixed , restricted specific schema: use sql
+		SQL provide high acid and is very strict consistency so eg is banking transactions
+b. eventual consistency : go for nosql like mongo as it supports very high scalability , high availability but no acid support
+			so consistency level in distribued d.b will be eventual due to replca set synchronization time
+			
+-=-=-=-=-=-=-=-CAP theorom-=-=-=-=-=-=
+among consistency, availability and aprtition tolerance for any D.B only two can be achieved
+so for distributed d.bs p is already there so either it could be highly available or could be highly consistent
+
+consistency: meaning if some user updated some data it should relfect latest value to all users extremely quick with no wait time
+availability: a lot of user cana lways add new data/ access different sharf with no down time/wait time
+Partition: meaning data is shared in multiple shards and these multiple d.b brokers talk over network like distribued systems/distributed d.bs
+so if we want high availability and high consistency then we should use sql with no partitioning
+so if system is distributed ans stateful like distributed d.b then it is always partitioned and hecne either it could be high consistent or high available
+so thats why in distributed systems most of the tools like kafka/mongo/cassandra sacrifices consistency making it eventual consistency
+
+3 level of scaling is defined in scalecube for microservices
+similar to microservices scaling cube same 3 d scale cube applies to D.B sacling as well
+x axis scaling: instead of having single application or D.b instance we have n number of service or d.b instance, this is x level scaling
+breaking monolith to microservice itself is x level scaling
+y level scaling: for each microservice/d.b we keep more instances for stateless no issues but for statefull we need to follow CAP theorom
+for statelss keep 3-4 instances of same microservice makes it y level scaling
+for d.b we keep partitioned data(n instance of d.b working with each owning set of data) is z level scaling
+so for stateless apps we have x axis(monolith to microservice) scaling and y level(multiple nodes of same microservice)
+for stateful we have single big d.b to n smaller d.b for each microseervice(x level) and z level(data partitioning)
+
+types of scaling in D.Bs-
+a. horizontal scaling: data sharding, each database instance in cluster hold same schema but divides data like rows are divided
+b. vertical scaling: each database instance in cluster holds different columns of data, schema is different
+meaning in horizontal scaling we have same table structure but rows are divided among shards
+but in vertical scaling one shard contains id and one column other shard contains other columns and id
+benefit of vertical scaling is that highly used columns for filtering can be kept in more shards / faster shards
+and less used can be kept in weaker/smaller computing shards
+horizontal scling is mostly preferred in microservice and for big data vertical sacling is preferred 
+
+-  we can do partitioning based on location of the user, 
+	based on the location we can use closest A.Z containing shard and that can reduce latency a  lot
+	aka geosharding : sharding based on the geo location
+- we can also do the same using some of the column present on the table : partition key	
+
+-=-=-=-microservice d.b patterns/principles-=-=-=-=-=-=
+- in monolith whole application data was stored in single d.b containing all the tables
+	so one service class can view one table or multiple table and so on, it was easy to implement transactions
+	we can easily view multiple tables at once
+	once we moved to microservies even the tables present was divided among multiple service, each owning its own d.b containing its own tables
+	so if one service wants to view table present in other service(in monolith it was visible as d.b was same) it has to get it via api call -> data integrity and decoupoing of systems
+- but in case we want to skip the sych http api calls for external table viewing we can use materialized view pattern
+basically we create a view copy in the other service , a thread runs behind the scene which updates this table
+so http calls is skipped, however challenge is the data should be latest and view shud not have stale data
+when in source api data is updated it should also publish an event and view table microservice can consume this and update to ensure data is not stale -> eventual consistency on behalf of very high availability
+	- it is called materialized view as it is mostly read only from depdendnt api as it just read and updates only when its source data got modified and event is triggerred
+	
+- CQRS adds on features from materalized view pattern , however the reason for using both are different
+		materialized view is used so that dependent api need not call api for data and have local copy, local cpy is udated from event bus which got sent when sorce data is modified
+	CQRS is used so that we can scale read adn write replcas differently
+	- based on segregation of concerns -> but have eventual consistency
+benefits of CQRS
+a. we can scale read and write apis seperately, sometime read and write have way different scaling needs based on loads
+b. some time we need read and write view different , in read side we can have different data schema , reduce the joins etc
+	aka materialized view, on write side it is good to have related tables for maintainability	but on read side for low late4ncy we can use single table based on view needed
+c. we can use different different databse tools on read as well as write based on need		
+
+- eventual consistency is used for applications with very high availability and data partitioned -> CAP theorom
+
+- drawbacks of CQRS with event sourcing
+ a. too much complexity to understand architechture and debug issues
+ b. eventual consistency, read materialized view is good for performance but can take some time to update based on latest write d.b
+ 
+ - CQRS is heavily used by instagram , postgres for write data base and cassandra for very fast read data base, stores huge data and still query is very fast
+ tech stack , write d.b -> postgres/sql oracle, read d.b -> cassandra for very faster
+ 
+ - event driven architechture not only makes loosely coupled systems , it also increase performance.latency
+  - in normal sync communcation a query call from ont=e api will take some time, but using principles like materialized view 
+  any update in write api can send event and other services depdent on that can consume this and update local D.bs
+  ensuring we do not need a call from depdent apis/services, it can fetch data from local d.b materialized view -> great
+  
+- why kafka is best option for acting as a backbone for event driven services -> as it supports producer/consumer to great extent
+	, provides kafka connect for integrating easily with common systems like d.b, twitter etc
+	, provide great option for stream processing real time streamsusing
+	, great integration with tools like lambdas aws, elk, mi tools, apache spark etc with minimal work and hence it wins over rabbit mq in event driven architechture
+	
+- even event driven systems have eventual consistency
+
+- why can not we use local cache on spring application itself in microservices-
+		because on next call the loadbalancer might redirect to another instance of same applicattion where session state might not be updated and can lead to data loss/corrupt data shown
+	there should be a shared instance sperately like redis a distribued cache
+- caching increases performance , and throughput as well	
+- Redis full form is remote dictionary server
+
+- deployment benefits of microservice over monolith
+a. in monolith we have single huge war/waj application whihc take huge time and can have more downtime during deployment
+b. we an scale instances sperately in microseervice
+
+- containerization is very importatnt in microseervices deployment process, since we have 100s of microservice running and using different tech stack
+	we need a way to unify the deployment procedure as node js deployment process will be different to that of spring or python apps
+	it will be tough for infra team to have seperate deployment pipelines
+	using docker/ containerization we cn unify steps of deployment irrespective of microseervice internal tech stack
+	unify steps of deplpy run microseervice irrespective of internal os and config steps are kept within container config and dev need not do that
