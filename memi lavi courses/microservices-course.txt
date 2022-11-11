@@ -1,0 +1,116 @@
+jai shree ganesh
+
+benefits of monolith
+- easier to implement
+- easier to debug as no multi service debugging is needed
+- architechture is easy to visualize as everything reside in on process (no queues/ inter service call)
+- no inter service communication and hence faster
+note: but it should not share any service via API, should be standalone , complete on its own and share nothing
+
+SOA : service oriented architechture
+- it meant to share functionality over internet, create code and make it shareable via network call
+- each service shares functionality and also consume other services
+- netwrok communication happens via SOAP protocol with proper api contract using wsdl and xsd
+  xml request payload : heavier
+  wsdl for defining schema
+- ESB sits in betwern services for centralized governance, like rate limiting, routing, authentication
+   however due to bad usage dev stars adding business logic to this caused in problem with SOA
+   ESB do cross cutting concers like rate limiting , routing, authentication, logging, monitoring etc  
+- ESB is implementation of mediator design pattern
+- Before SOA if we want to share functionality then we must share jar/lib that makes monolith code more complex
+   2 issues: more code complexity in monolith app, second is lib has to be created for different programming language
+  to solve this problem of sharing functionality/service SOA came with language agnostic support
+
+SOA benefits
+a. now services can be shared and made resuable for others
+b. polyglot sharing unlike jars: client language agnosttic using SOAP and WSDL
+
+problems with monolith and SOA:
+a. monolith can be developed in single tech stack, hence for specificusecase  can not use another language or tech stack
+b. if we wan to ugrade tech stack like jdk 8 to 11 or mysql to mongo and upgrade spring boot stack then it has to be odne for whole code base
+   hence upgrade of monolith tech stack will be time consuming
+c. monolith have inflexible deployment,
+   whole codebase is deployed can not deploy part of codebase
+   due to this deployment takes huge time even for a simple code fix in one class of app
+   also just for this fix we need to do vigrous sanity testing on production that is very time consuming
+d. can not scale based on specific module: very inefficent resource computing
+e. monolith causes codebase to be very huge and hence for new dev very very tough to understand and visualize and get expert
+   new dev takes months to even understand the codebase
+f. SOA used ESB extensively
+   - it is very costly and need money
+   - too much tight coupling 
+   - need experts again adds costly
+   - by mistake too much business logic were added making it very heavy weight   
+     
+	 
+	 
+- Charachterstics of microservices:
+a. modularization using services
+   we can domodularization using module projects and then importing them as libraries in usable projects
+     benefit: faster , however code becomes more complex , and maintainability is tough also hardware resource sharing is same for all the modules
+   microservices focus more on modularization but sharing via services using light weight netwrok call
+     benefit: plyglot tech stack , no eed to create seprate library for each language, can scale both these services seperately   
+b. bounded context: team organizaion based on business domains
+   in microservices teams are divided on the basis of business domain and functionality
+   in traditional management it used to be divided based on implementatin technique
+    eg: ui team, back end team, service team , D.B team each of this team have different goal causing communication gap
+	   also since goals are different there might be a conflict causig overall app degradation, also politics in humans can occur
+   microservices says get a business domain and loop ui, d.b , back end , sevice dev club together in a team
+   goal of all these dev are same and hence polictics wont cause issue + communication gap is closed f   
+c. products and not project: dev to make relationship with customer and to understand and think like consumer before writing code
+d. decentralized governance:
+   in monolithhs there were standards set for dev
+   what tech stack to choose what db to choose  how logs are generated etc etc dev team is forced to follow this even in case this is not best
+   in microservices we can choose our own tech stack, d.b , logging framewrok etc based on microservices use case
+   
+e. decentralized data management
+   : different d.b for each services based on use case , ensure to check if pros and cons are calulated or else take single D.B
+f. design for failure
+g. dumb pipes and smart services:
+   SOA failed due to ESB : costly , tough to maintain and adds tight coupling plus it creates too much depdency and cost on ESB
+   also WSDL caused tight coupling in inter service communication 
+   Microservices suggest to use very light wright and les complicated protocol for inter service communication like http
+   http way to communicate + even middlewares should not have any business logic (unlike ESB) let service do those things
+h. design evolution:
+   never migrate monolith to microservice in one shot, take it gradually,
+   convert one module to microservice update other modules to call it via rest api and then move on
+i. automation infrastructure
+  : in soa there were lack of automation tools causing delay in deliverables and money wastage
+   in microservices automation testing and deployment is mandatory as we can not deploy these many microservices manually: time and money wastage
+      
+	  
+- designing microservices architechture is methodical meaning
+    : should not rush directly to coding, first plan prooperly so that less code has to be written and hence less testing and bugs
+	: follow step by step process, go gradually
+
+- steps for implementing microservice
+ a. understand business requirement
+ b. understand non functionalal requirement
+ c. work on moduarization of service: very important and should be spending much time on this, as once decided can not increase the bounded context later
+ d. decide inter service communication protocol/ method
+ e. choose tech stack and d.back
+ f. document and share
+ 
+- steps to choose proper moduarization
+ a. find proper context of business functionality
+ b. find bounded data entities: ensuring sharing does not happen and each microservice is as self dependent
+  single responsility principle and loosely coupled systems  
+ 
+- kafka gives advantage when there are one producer and multiple consumer reading same event
+  in rabbit mq once a data is pushed to a queue, that data is load balanced among consumer and no concept of consumer group
+  in rabbit mq among all consumer one event froma  queue can only be pulled by one consumer
+  but to do this we can use fanout exchange but that can add more configuration after initial development
+  no producer code is changed but need to add one new queue on the exchange and new consumer code is needed  
+  
+- service mesh is used to manage inter service communication and support in microservices
+- benefits/features
+ a. no need to write code on client side to handle timeout/retries/circuit breaker
+ b. no need to wirte code on client microservice for load balancing, service discovery
+ c. support monitoring using prometheus grafana and kiali
+ d. authentication , authorization , rate limiting ,
+ e. centralized logging
+ f. protocol conversion: eg  one microservice exposes tcp, it can automatically convert http to tcp without writing client code 
+ 
+ we should only use service mesh when it has real use case:
+  ->  if there are huge number of microservices involved and there are huge number of netwrok request are there
+     also netwrok request are bound to fail and need to keep code clean
