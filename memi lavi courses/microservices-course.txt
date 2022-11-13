@@ -40,13 +40,16 @@ f. SOA used ESB extensively
    - it is very costly and need money
    - too much tight coupling 
    - need experts again adds costly
-   - by mistake too much business logic were added making it very heavy weight   
+   - by mistake too much business logic were added making it very heavy weight
+   - SOA have single database that again causes 2 issues
+      a. can not choose optimum d.b based on use case
+      b. failure of single D.B causes all the functionalities to go down   
      
 	 
 	 
 - Charachterstics of microservices:
 a. modularization using services
-   we can domodularization using module projects and then importing them as libraries in usable projects
+   we can do modularization using module projects and then importing them as libraries in usable projects
      benefit: faster , however code becomes more complex , and maintainability is tough also hardware resource sharing is same for all the modules
    microservices focus more on modularization but sharing via services using light weight netwrok call
      benefit: plyglot tech stack , no eed to create seprate library for each language, can scale both these services seperately   
@@ -114,3 +117,48 @@ i. automation infrastructure
  we should only use service mesh when it has real use case:
   ->  if there are huge number of microservices involved and there are huge number of netwrok request are there
      also netwrok request are bound to fail and need to keep code clean
+
+Types of service mesh
+a. interprocess: code of service mesh needs to be imported via libraries within client and server microservies
+     +ve: fast in performance
+     -ve: ployglot issue will occur and also distribution of hardware resources
+b. sidecar: a seperate process is added outside client and server microservice: one each for each microservice
+     +ve: ployglot issue will occur and also distribution of hardware resources
+     -ve: a bit of performance as netwrok flow will be : service1 -> sidecar1 -> sidecar2 -> service2
+
+- logging implementation approaches:
+ a. use logback/log4j to append log statements to a .log file in machine (EC2 directly or k8s node), logstash runs on k8s node or EC2 machine(with updated AMI)
+    and push to elastic: once logstash do the job it is on scheduled basis and it is very CPU intense so in that case we can choose 2 nd approach
+ b. logback with kafka connect: logback pushes event to kafka connect cluster in async mode and kafka connect pushes to elastic
+    this ensures that actual working service's EC2 machines / k8s nodes do not consume much CPU and RAM
+
+When not to choose microservices
+a. when our system is simple and have small set of business funcationalities
+   meaning after service mapping if we have 2-3 services only with less functionalities then it do not make sense to add microservices complexities with 0 advantage
+b. intermingled data and business logic: if we are not able to make services self contained based on data/logic then it makes no sense
+   example if for alost all request if we have to go through multiple microservices, microservices was meant to be seggregated in autonomous self contained services
+   if business logic/ entity is too much shared then too many request call may occur that can be tricky to handle
+c. extreme performance sensitive system
+d. quick and dirty POC systems: microservices takes too much time and complexity so for POCs it is not recommended
+
+Anti patterns/mistakes in microservice
+a. not well defined services
+b. not well defined service APIs
+c. not implementing cross cutting concerns first
+d. extending scope of a service
+
+why do we need to break monolith to microservices:
+a. shorten update/release cycle
+b. modularization of system: better maintainable
+c. save costs
+   monolith are based on outdated paid tech stack :  we can move to modern opern source to save cost 
+   can do horizontal scaling and that can save cost too
+d. its esy to upgrade tech stack of microservices
+
+Strategies to break and convert monolith to microservices:
+a. new modules new services: once decision of converting to micorservices is done we can follow this
+   any new functionality if falling in a new module keep it outside monilith architechture and keep it seperate service
+   monolith module can use it via rest api calls
+b. move modules to indepent services with its own set of business logic and data entities
+c. complete rewrite: when existing monlith is extremely old and tech stack is obsolete we can completely rewrite from scratch
+   
