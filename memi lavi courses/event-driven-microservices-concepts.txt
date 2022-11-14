@@ -1,0 +1,78 @@
+jai shree ganesh
+
+Why Event driven microservices:
+- It is an enhancement/evolution of microservices which itself is most famous design paradigm
+- It is very popular
+- Extremely easy to scale with high efficiency
+- Loosely coupled services
+
+It is not like EDA will solve all problems , should be used when it is actually needed
+Steps:
+a. if it is actually needed
+b. how to implement it correctly
+
+Remember EDA is extension of microservices : it only takes care of inter service communication and other charachters of microservices remain intact
+
+synchronous inter service communication mehods:
+- Command is interservice communication method where client reqest to modify aggregate state of server module,  optional response is there
+- query is also another interservice communication method where client request for data related to aggregate state of server module
+
+synchronous command and query methods have below issues:
+a. performance hit:  as client service gets blocked until server respond
+b. tight coupling: client integration code depend upon server api exposing code
+c. failure cases: if services is down than client fails
+d. scalability: if scale has to be increased more cost will be needed: not cost efficient in scaling
+
+Event: It is the communication method b/w client and server microservices like command and query
+Event means something happened in the system and it notifies services that if this event concerns you take actions
+- event push never returns a response unlike synchronous command and query method in interservice communication
+- asynchronous in nature
+- client never know how many services are concerned of it, client just need to push to event bus and 
+  automatically n number of services concerened with this can take action
+
+
+
+When to use CQRS and event sourcing
+- when we need to store historical data like banking systems
+- when read and write scaling varies a lot
+- when read and write d.b structure and tech stack has to be different
+- we are ok with eventual consistency but with high availability
+
+When to use event driven systems
+- when we need infinite scalaibility with lesser cost
+- when we need loose logical and infra coupling b/w services
+- async and higher performant services
+- network layers should be having no issues
+
+Stateless EDA
+: In case while a consumer is processing an event it do not need past or future event records it is stateless
+  eg: processing payment init event
+Stateful EDA:
+: : In case while a consumer is processing an event it need past or future event records it is stateless
+  eg: sending notification if in last 1 minute 5 orders got failed by order processing service: it is better to hare state in external data source
+   this can be challenging if we are storing previous state in consumer memory, it will force us to push data to that specific consumer 
+ 
+Event Streaming
+: same like event bus 
+: however in event streaming data is retained until retention period in event bus even after consumer have processed it
+: it can handle huge load , more than event bus like rabbit mq
+: can be replayed for older data and hence can be used as event source back bone also
+: mostly data is inserted from external system like telemtry,logging etc and hence need to handle huge loads
+
+Advance topics in EDA:
+a. EDA in combination with req/res: producer act as rest api and then publish event to event bus
+b. EDA with acknoledgement
+c. Event bus acting as source of truth: explained below
+- in traditional architechture D.B act as source of truth
+  but in EDA if channel has retention policy we can use that as source of truth
+  one example is KSQLDB : in event driven system kafka can act as event bus and using KSQLDB powerful query we need not to have different D.B as source of truth
+  KSQLDB provide flexible and powerful query on the kafka data source but need seperate setup
+
+d. EDA in front end
+   two ways
+   - Micro front ends: divide the page in F.E into seprate independent autonomous modules like in react
+     each of these have its own resource, b.e services , code etc, one of the module/component can send and event to another one
+    eg: product page calls B.E for add to cart api and then on success send F.E event to cart page/componenet
+   - Push notifications : similar to graphql subscription, spring webflux streaming, GRPC server side streaming
+     server send events to F.E
+
