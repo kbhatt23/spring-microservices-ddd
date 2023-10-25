@@ -1,0 +1,6 @@
+com\learning\restrauntdataaccess\entities\OrderApprovalEntity.class
+com\learning\restrauntdataaccess\entities\OrderApprovalEntity$OrderApprovalEntityBuilder.class
+com\learning\restrauntdataaccess\adapter\OrderApprovalRepositoryImpl.class
+com\learning\restrauntdataaccess\repositories\OrderApprovalJpaRepository.class
+com\learning\restrauntdataaccess\mapper\RestrauntDataAccessMapper.class
+com\learning\restrauntdataaccess\adapter\RestrauntRepositoryImpl.class

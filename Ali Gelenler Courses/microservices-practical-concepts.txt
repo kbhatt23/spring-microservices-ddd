@@ -1,0 +1,210 @@
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+kafka-console-consumer --bootstrap-server kafka-broker-1:9092 --topic payment-request --from-beginning
+
+- There are various advantages of microservices but also some cost assocaited with it
+  eg: monitoring and management of these individual microservices
+      transaction management
+	  interservice communications
+  To solve such issues we must use correct tools and architechtural patterns
+  
+- Clean & Hexagonal Architechture
+  -> isolate the business logic of microservice with any external dependencies
+  in summary such architechture introduces loose coupling
+  and individual microservice can be developed and tested independent of any external dependencies like db,queue,other microservices  
+  due to loose coupling we can easily adapt to any new technolin future
+  if services are tightly coupled then migrating one service to new tech stack might be tough
+  
+  Hexagonal architechture is also known as ports and adapter pattern
+  in each microservice for any external dependencies we will use interfaces and will have implementations
+  in future these implementations can be added like a new class for new future tech stack that adheres to same contract via interfaces
+  
+  Domain driven design
+  Kafka: resillient, scalable event store for event driven patterns like CQRS , SAGA, outbox pattern etc
+  SAGA: implement distributed transaction across multiple services
+  Outbox Pattern: helps to introduce strong consistency in SAGA pattern
+  SAGA is used when there is a long running transaction across various independent services having independent bounded context
+  eg of outbox pattern
+  two services works in saga, in case first service complete local ACID transaction succesfully but error occurred while pushing to kafka
+  we must ensure that local acid transaction + kafka event publish happens atomically and consistently
+  if first service completes local ACID transaction but couldnot publish kafka event SAGA is incomplete
+  also the system is in inconsistent state
+  Solutions:
+  Approach 1: do not use DB at all just use event store as single step in each service
+     but this can be tough , kafka do provide ksql to query kafka event store for such scnearios
+	 but it might not be easy to implement + performance might be compromised a bit
+  Approach 2: Outbox pattern
+  do not have 2 steps, first db ACID transaction then kafka event publish
+  instead have below steps
+  ACID update step in DB + outbox table insert in DB
+  since the database is same in both step this can be made ACID transactional
+  we can have scheduler taking data from outbox table and pushing kafka event
+  we can have strong consistency in each service's local ACID transaction
+  as actual DB transaction and outbox table update happens in same DB and transaction can have strong consistency
+  there are 2 approaches to implement outbox pattern
+  a. using scheduler: pull the database to read outbox table and push to kafka
+  b. using CDC: change data capture
+     can use things like kafka connect on databse insertion and push event to kafka topic
+  In case of CQRS also we must use outbox pattern: if using axon framework this is already implemented	 
+  
+==============Hexagonal and Clean Architechture=================
+- have layered architechture: so that business logic module is loosely coupled from external modules
+  in one layer we have implementations related to that feature
+  like have seperate layer for business logic domain, seperate for data layer, spereate for controller etc
+  this way we  an plug in and plug out: easy maintaainance and in future migrating to other tech will be easy
+  main end goal is to isolate business domain logic in one microservice indepdent of external layers like db,queue,external microservices etc
+  result is high maintained system with easy testability and enhanceability
+   - can test business logic in code using mocking indepdently
+   - easy migration of overall system
+   - easy migration of tech stack of outgoing and incomming external systems like db, queue, external microservices etc
+   - code readability increases
+   - better code maintainance
+  use polymorphism + dependency inversion principle
+  low level module (data layer) should never depend on high level module(business domain logic layer)
+  high level(business logic layer) module depend on low level module(data layer) but via interface contract
+  
+- Divides the system into 3 layers
+  incomming , core domain , outgoing  
+  
+- in DDD and clean architechture we have entities but in DDD we also have aggregate group
+   Clean							DDD
+  Entities                            Entities + aggregate grou(group of entities clubbed together)
+  Use case (business logic)            Domain service
+  
+  in DDD it is expected that we use aggregate root for all the operations and not individual entities seperately
+  
+- To implement clean architechture and Hexagonal architechture we need to create multi module maven project
+  can have core maven project with type as pom
+  individual module will be children of this using parent tag in modules and add module tag in parent pom.xml
+  all core dependencies are defined in parent dependencymanagement tag and version can be controlled at one place
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- DDD have one common approach to clean architechture and hexagonal architechture
+  i.e to keep the domain logic code modularised and isolated from the infrastruce and external dependency code
+  this way we can plug in and plug out external dependencies(db, api calls, cache etc) , infrastruce code(docker, k8s etc)
+  core module can be isolated and be testable indepdently by mocking to interface
+  in future if we want other modules can be upgraded/extended easily
+  Domain here means the core business logic provided by this specific microservice
+
+- DDD have 2 sides
+  a. strategic DDD: divide services with fixed domain boundaries aka bounded context 
+     we have strict features/business functionalities of a service in terms of bounded context
+  b. tactical DDD: focusses on the implementation details like aggregate, entities, domain services, application services etc
+  examples: entity -> commerceItem, PaymentInfo , ShipmentInfo etc
+   Aggregate: OrderItem  : it contains logical group of other entities whoese state has to be consistent
+   Aggregate should hold the business logic specific to aggregate and entities
+   aggregate root: holds the aggregate object
+   we should not be ablt to change any entity or aggregate state directly without aggregate root
+   value objects : immutable DTOs: have no business logic but hold immutable data
+   events: used to notify other bounded context domain that an action occured to update state of an aggregate
+   Domain services: business logic when multiple aggregates logic is needed
+   application service: code to an interface : used to expose business functionality to other modules/domain
+   
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- while using bigdecimal make a note
+  if using equals method to check if some bigdecimal is actually 0 it can cause bad result
+  eg: BigDecimal a =0.0;  and logic is if(a.equals(0)) : it wont work as we have not used 0.0
+  better to use compareto method for such bigdecimal operations
+
+- Domain Service classes/interfaces interacts with entities and do business logic related to that domain only
+  and it returns domain event associated
+  for terminal methods we can have void return as no event is needed to be triggered for another domain's bounded context  
+  The triggering of event should happen from application service that internally uses domain services
+  domain services do business logic and create events and apppication service use the event
+  why: because in domain services we save the state of entities in database
+  we should always save the data in database and then only fire appropriate event
+  if we first fire the event that is bad as it might give error during database storing step  
+  
+  domain class can work wih multiple root aggregates as well
+  
+- We should add application services in seperate module: eg: order-domain-application-service module
+  this can inject order-core domain module which are generic
+  this can do validations from request and expose interface based contracts for other modules
+  we keep domain core in isolation irrespective of framework and application-service module can use framework specific things
+  Just like CQRS using axon framework: we will need command objects that has to be created by clients
+  client create command objects and application service needs them as input in methods
+  note: in core module it is better to stat away from frameworks like spring, lombook etc for flexibility
+  in application layer we are free to use frameworks
+
+- Command classes are immutable data holders like DTOs
+  should be easy for client to understand this hence Value objects wont be used here
+  application-service will take this as input do validations and then use domain core modules that uses value object, entitities and aggregates
+  let application-service do transformation from command object(easy for client) to code module objects like aggregate, entities, value objects etc  
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- While using @Valid annotations like @NotNull @NotEmpty etc we should put in interface or superclass
+  as in children we can not add extra feature than interface/super class
+  if we have added @Valid and other annotations in interface or class methods
+  than on implementor class level we need to add @Validated to make it work
+  Remember it works fine in RestController without adding @Validated in the controller class and just adding @Valid in methods
+  but for other spring beans we must add @Validated on class level too  
+
+- While writing input port implementation we can make class as package private
+  as we will expose interface to public for use and inner implementation class should not be accessible by external client   
+  
+- Remember @Transactional annotation works using spring AOP behind the scene
+  and AOP works only when one bean is calling another bean
+  so if we have one method annotated with @Transactional it will not work if we call that method from method from same class
+  only if another class/bean calls this method AOP can intercept it and transaction will work
+  also method must be public, but if using Aspectj instead of Spring AOP even private methods can be made @Transactional
+
+- Even @Transactional can be readOnly 
+  eg for order query handler we can have readOnly Transactional annotation  
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- Even docker-compose provide external configuration 
+  create a file with name .env and put key and value
+  the key becomes environment variable inside docker compose and in yml we can use them using {key}
+  Even in docker compose we can create n files and run them using command docker-compose -f file1.yml -f file2.yml
+  this way we can create usable and maintainable seggregated compose files
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- in spring boot we can do exception handling using @controllerAdvice at single place for all controllers where exception occurred
+  but even in this there will be common exception for all the microservices
+  eg: handling java.lang.Exception and handling validationexception
+  so these can be kept in a common application module and get it imported by other exception handlers
+  so in order-application we can have controllers and controller advise specific to that module: like ordernotfoundexception
+  but generic exception and request validation failure exception can be handled in common module  
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- in spring boot spring data jpa we should set open-in-view as false (default value set as true in spring)
+  it is because it keeps the persistence connection open and can have adverse performance effect
+  -> it keeps connection still there even after sql is executed
+ also set binaryTransfrer as true so that data from spring boot to postgresql foes in binary format
+  : faster and takes less network space
+
+- While using UUID as data type in one of the column or primary key we should set below field in datasource query param
+  stringtype=unpsecified: so that db consider uuid special param as supported in column
+- in kafka configuration we can set compression type as snappy: its a balance between time/cpu to serialize and network bandwidth
+  gzip : compress very well but cpu and time to serialize/deserialze will be more but low on network
+  snappy gives a balance between these
+  also can keep batch size and linger ms: once either batch fulls or linger time is spent then only batch data will be pushed to kafka
+  also settimeout: if kafka producer do not acknolwdge in this period a retry will be tried
+  
+- in kafka consumer we need to configure heart beat time
+  every interval of this configured time application sends heartbeat to kafka broker telling i am consumer of this consumer group
+  if after session timeout no heart beat came kafka broker consider this consumer to be down and remove from consumer group  
+  
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+

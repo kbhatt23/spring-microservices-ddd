@@ -10,10 +10,10 @@ note: but it should not share any service via API, should be standalone , comple
 SOA : service oriented architechture
 - it meant to share functionality over internet, create code and make it shareable via network call
 - each service shares functionality and also consume other services
-- netwrok communication happens via SOAP protocol with proper api contract using wsdl and xsd
+- network communication happens via SOAP protocol with proper api contract using wsdl and xsd
   xml request payload : heavier
   wsdl for defining schema
-- ESB sits in betwern services for centralized governance, like rate limiting, routing, authentication
+- ESB sits in between services for centralized governance, like rate limiting, routing, authentication
    however due to bad usage dev stars adding business logic to this caused in problem with SOA
    ESB do cross cutting concers like rate limiting , routing, authentication, logging, monitoring etc  
 - ESB is implementation of mediator design pattern

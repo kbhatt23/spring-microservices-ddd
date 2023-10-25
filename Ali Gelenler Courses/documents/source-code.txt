@@ -1,0 +1,5 @@
+Repository for source code:
+https://github.com/agelenler/food-ordering-system
+
+Repository for infrastructure code:
+https://github.com/agelenler/food-ordering-system-infra

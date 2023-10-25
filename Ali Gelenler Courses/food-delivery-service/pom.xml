@@ -1,0 +1,181 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.learning</groupId>
+	<artifactId>food-delivery-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>food-delivery-service</name>
+	<description>Food Delivery Service</description>
+
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.6.4</version>
+		<!-- good practice to add relativePath in case repository is external like 
+			spring boot -->
+		<relativePath />
+	</parent>
+	<modules>
+		<module>order-service</module>
+		<module>common</module>
+		<module>infrastructure</module>
+		<module>customer-service</module>
+		<module>payment-service</module>
+		<module>restraunt-service</module>
+	</modules>
+
+	<properties>
+		<maven-compiler-plugin.version>3.9.0</maven-compiler-plugin.version>
+		<mockito.version>4.3.1</mockito.version>
+	</properties>
+
+	<!-- children can pick or deselect according to their need but version will 
+		be controlled -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>order-domain-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>order-application-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>order-application</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>order-dataaccess</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>order-messaging</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>common-domain</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>kafka-producer</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>kafka-consumer</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>kafka-model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>kafka-config-data</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>common-application</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>common-dataaccess</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>payment-domain-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>payment-application-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>payment-dataaccess</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>payment-messaging</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>restraunt-domain-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>restraunt-application-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>restraunt-dataaccess</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>restraunt-messaging</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<!-- dependencies will be used by all the children pom , children can not 
+		deselect , has to use this anyway -->
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-logging</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<release>11</release>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

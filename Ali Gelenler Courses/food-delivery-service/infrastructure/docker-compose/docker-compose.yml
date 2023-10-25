@@ -1,0 +1,152 @@
+version: '3.7'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:${KAFKA_VERSION:-latest}
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok"
+    volumes:
+      - "C:/Kanishk/learning/docker-data/zookeeper/data:/var/lib/zookeeper/data"
+      - "C:/Kanishk/learning/docker-data/zookeeper/transactions:/var/lib/zookeeper/log"
+      - "C:/Kanishk/learning/docker-data/zookeeper/secrets:/etc/zookeeper/secrets"
+    networks:
+      - ${GLOBAL_NETWORK:-kafka}
+  kafka-broker-1:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}
+    hostname: kafka-broker-1
+    container_name: kafka-broker-1
+    depends_on:
+      - zookeeper    
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-1:9092,LISTENER_LOCAL://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_COMPRESSION_TYPE: producer
+    volumes:
+      - "C:/Kanishk/learning/docker-data/kafka/broker-1:/var/lib/kafka/data"
+      - "C:/Kanishk/learning/docker-data/kafka/secrets/broker-1:/etc/kafka/secrets"
+    networks:
+      - ${GLOBAL_NETWORK:-kafka}
+  kafka-broker-2:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}
+    hostname: kafka-broker-2
+    container_name: kafka-broker-2
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-2:9092,LISTENER_LOCAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_COMPRESSION_TYPE: producer
+    volumes:
+      - "C:/Kanishk/learning/docker-data/kafka/broker-2:/var/lib/kafka/data"
+      - "C:/Kanishk/learning/docker-data/kafka/secrets/broker-2:/etc/kafka/secrets"
+    networks:
+      - ${GLOBAL_NETWORK:-kafka}
+  kafka-broker-3:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}
+    hostname: kafka-broker-3
+    container_name: kafka-broker-3
+    depends_on:
+      - zookeeper
+    ports:
+      - "39092:39092"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-3:9092,LISTENER_LOCAL://localhost:39092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_COMPRESSION_TYPE: producer
+    volumes:
+      - "C:/Kanishk/learning/docker-data/kafka/broker-3:/var/lib/kafka/data"
+      - "C:/Kanishk/learning/docker-data/kafka/secrets/broker-3:/etc/kafka/secrets"
+    networks:
+      - ${GLOBAL_NETWORK:-kafka}
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${KAFKA_VERSION}
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - kafka-broker-1
+      - kafka-broker-2
+      - kafka-broker-3
+    ports:
+      - "8081:8081"
+    volumes:
+      - "C:/Kanishk/learning/docker-data/kafka-manager/secrets:/etc/schema-registry/secrets"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-broker-2:9092,LISTENER_LOCAL://localhost:29092
+      SCHEMA_REGISTRY_DEBUG: 'true'
+    networks:
+      - ${GLOBAL_NETWORK:-kafka}    
+  kafka-manager:
+    image: hlebalbau/kafka-manager:3.0.0.5
+    container_name: kafka-manager
+    hostname: kafka-manager
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      ZK_HOSTS: "zookeeper:2181"
+    networks:
+      - ${GLOBAL_NETWORK:-kafka}
+  postgres:
+    image: 'postgres:12.2'
+    restart: always
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_DB: order
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - 'db-data:/var/lib/postgresql/data'
+    ports:
+      - '5432:5432'
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    hostname: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: kanishklikesprogramming@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: jaishreeram
+    volumes:
+      - 'pgadmin-data:/var/lib/pgadmin'
+    ports:
+      - '9092:80'
+
+networks:
+  food-delivery-service-network:
+    driver: bridge
+    
+volumes:
+  db-data:
+  pgadmin-data:
+  
