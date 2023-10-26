@@ -1,5 +1,0 @@
-com\learning\commondataaccess\entity\RestrauntEntityId.class
-com\learning\commondataaccess\entity\RestrauntEntity$RestrauntEntityBuilder.class
-com\learning\commondataaccess\entity\RestrauntEntity.class
-com\learning\commondataaccess\entity\RestrauntJPARepository.class
-com\learning\commondataaccess\exception\RestaurantDataAccessException.class

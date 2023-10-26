@@ -219,3 +219,19 @@ it helps in long lived transactions across multiple services
 om shree ganeshaya namah
 om shree sita rama lakshman hanuman
 
+- The transactional outbox pattern makes SAGA pattern more consistent and safe
+  it uses series of local ACID transactions to ensure that distributed transactions are consistent and safe
+  in case of SAGA pattern we first commit local ACID transaction and then publish event
+  what happens if this event publishing step fails
+  we can not rollback ACID transaction so instead of event publlish we also add entry in another table of same database with ACID transaction
+  in same transaction first local DB operation happens and then entry is done in this outbox table
+  
+ approaches:
+ -> pull outbox table data and send to kafka using scheduler
+ -> use db change commit log to capture new entry in outbox table and then publish to kafka
+ ensure in both above approaches we do not miss any event nor we send multiple kafka event for same entry
+ idempotency also shall be handled
+ in approach 1 also ensure that there are correct optimistic locks and there is no concurrency issues
+ as scheduler from another instance might pick it and run it and cause idempotency issues
+ so use optimistic locks to be safe from these concurrency issues
+ 
