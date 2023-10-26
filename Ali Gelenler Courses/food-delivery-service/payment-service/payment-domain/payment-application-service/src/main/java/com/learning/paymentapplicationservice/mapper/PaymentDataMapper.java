@@ -1,9 +1,11 @@
 package com.learning.paymentapplicationservice.mapper;
 
+import java.time.ZoneId;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
+import com.learning.commondomain.constants.CommonDomainConstants;
 import com.learning.commondomain.valueobjects.CustomerId;
 import com.learning.commondomain.valueobjects.Money;
 import com.learning.commondomain.valueobjects.OrderId;
@@ -15,7 +17,7 @@ public class PaymentDataMapper {
 
 	public Payment paymentRequestModelToPayment(PaymentRequest paymentRequest) {
 		return new Payment(null, new OrderId(UUID.fromString(paymentRequest.getOrderId())),
-				new CustomerId(UUID.fromString(paymentRequest.getCustomerId())), new Money(paymentRequest.getPrice()));
+				new CustomerId(UUID.fromString(paymentRequest.getCustomerId())), new Money(paymentRequest.getPrice()),paymentRequest.getCreatedAt().atZone(ZoneId.of(CommonDomainConstants.UTC)));
 
 	}
 }
