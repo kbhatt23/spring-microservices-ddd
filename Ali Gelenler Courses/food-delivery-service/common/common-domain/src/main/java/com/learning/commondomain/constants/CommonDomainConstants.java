@@ -2,7 +2,10 @@ package com.learning.commondomain.constants;
 
 public class CommonDomainConstants {
 
-	private CommonDomainConstants() {}
-	
+	private CommonDomainConstants() {
+	}
+
 	public static final String UTC = "UTC";
+
+	public static final String DELIMETER = ",";
 }

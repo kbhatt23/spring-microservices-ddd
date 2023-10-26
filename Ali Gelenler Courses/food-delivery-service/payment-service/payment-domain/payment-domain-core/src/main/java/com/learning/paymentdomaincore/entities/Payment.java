@@ -22,11 +22,12 @@ public class Payment extends AggregateRoot<PaymentId> {
 	private PaymentStatus paymentStatus;
 	private ZonedDateTime createdAt;
 
-	public Payment(PaymentId id, OrderId orderId, CustomerId customerId, Money price) {
+	public Payment(PaymentId id, OrderId orderId, CustomerId customerId, Money price, ZonedDateTime createdAt) {
 		super(id);
 		this.orderId = orderId;
 		this.customerId = customerId;
 		this.price = price;
+		this.createdAt=createdAt;
 	}
 
 	public void initializePayment() {
@@ -62,6 +63,10 @@ public class Payment extends AggregateRoot<PaymentId> {
 
 	public Money getPrice() {
 		return price;
+	}
+
+	public void setCreatedAt(ZonedDateTime createdAt) {
+		this.createdAt = createdAt;
 	}
 
 }

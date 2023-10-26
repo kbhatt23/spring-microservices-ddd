@@ -43,13 +43,13 @@ public class RestrauntDataAccessMapper {
 
 	public OrderApprovalEntity orderApprovalToOrderApprovalEntity(OrderApproval orderApproval) {
 		return OrderApprovalEntity.builder().id(orderApproval.getId().getValue())
-				.restaurantId(orderApproval.getRestrauntId().getValue()).orderId(orderApproval.getOrderId().getValue())
+				.restrauntId(orderApproval.getRestrauntId().getValue()).orderId(orderApproval.getOrderId().getValue())
 				.status(orderApproval.getOrderApprovalStatus()).build();
 	}
 
 	public OrderApproval orderApprovalEntityToOrderApproval(OrderApprovalEntity orderApprovalEntity) {
 		return new OrderApproval(new OrderApprovalId(orderApprovalEntity.getId()),
-				new RestrauntId(orderApprovalEntity.getRestaurantId()), new OrderId(orderApprovalEntity.getOrderId()),
+				new RestrauntId(orderApprovalEntity.getRestrauntId()), new OrderId(orderApprovalEntity.getOrderId()),
 				orderApprovalEntity.getStatus());
 	}
 }

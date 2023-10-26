@@ -27,7 +27,7 @@ public class OrderApprovalEntity {
 	@Id
 	private UUID id;
 	
-	private UUID restaurantId;
+	private UUID restrauntId;
 	
 	private UUID orderId;
 	

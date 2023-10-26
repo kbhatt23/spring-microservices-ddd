@@ -2,6 +2,8 @@ om shree ganeshaya namah
 om shree sita rama lakshman hanuman
 
 kafka-console-consumer --bootstrap-server kafka-broker-1:9092 --topic payment-request --from-beginning
+kafka-consumer-groups --bootstrap-server kafka-broker-1:9092 --list --topic restaurant-approval-response
+
 
 - There are various advantages of microservices but also some cost assocaited with it
   eg: monitoring and management of these individual microservices
@@ -204,6 +206,15 @@ om shree sita rama lakshman hanuman
   
 om shree ganeshaya namah
 om shree sita rama lakshman hanuman
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+SAGA pattern was invented in a publication in 1987
+it helps in long lived transactions across multiple services
 
 om shree ganeshaya namah
 om shree sita rama lakshman hanuman

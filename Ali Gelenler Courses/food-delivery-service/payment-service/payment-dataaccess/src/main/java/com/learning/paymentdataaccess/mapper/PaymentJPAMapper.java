@@ -20,6 +20,6 @@ public class PaymentJPAMapper {
 
 	public Payment paymentEntityToPayment(PaymentEntity paymentEntity) {
 		return new Payment(new PaymentId(paymentEntity.getId()), new OrderId(paymentEntity.getOrderId()),
-				new CustomerId(paymentEntity.getCustomerId()), new Money(paymentEntity.getPrice()));
+				new CustomerId(paymentEntity.getCustomerId()), new Money(paymentEntity.getPrice()), paymentEntity.getCreatedAt());
 	}
 }

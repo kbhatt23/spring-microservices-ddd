@@ -143,6 +143,11 @@
 				<artifactId>restraunt-messaging</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>com.learning</groupId>
+				<artifactId>saga</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

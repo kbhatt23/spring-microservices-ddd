@@ -1,4 +1,5 @@
 com\learning\commondomain\valueobjects\Money.class
+com\learning\commondomain\events\TerminalEvent.class
 com\learning\commondomain\constants\CommonDomainConstants.class
 com\learning\commondomain\events\publisher\DomainEventPublisher.class
 com\learning\commondomain\exceptions\DomainException.class
