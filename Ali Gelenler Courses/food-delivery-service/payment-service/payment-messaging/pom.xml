@@ -27,5 +27,9 @@
 			<groupId>com.learning</groupId>
 			<artifactId>payment-application-service</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+		</dependency>
 	</dependencies>
 </project>

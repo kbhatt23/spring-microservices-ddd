@@ -36,5 +36,9 @@
 			<groupId>com.learning</groupId>
 			<artifactId>common-domain</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.learning</groupId>
+			<artifactId>outbox</artifactId>
+		</dependency>
 	</dependencies>
 </project>

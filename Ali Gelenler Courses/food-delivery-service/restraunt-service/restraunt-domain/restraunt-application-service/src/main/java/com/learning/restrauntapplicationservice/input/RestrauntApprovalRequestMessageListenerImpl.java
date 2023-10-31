@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 
 import com.learning.restrauntapplicationservice.dto.RestrauntApprovalRequest;
 import com.learning.restrauntapplicationservice.helper.RestrauntApprovalRequestHelper;
-import com.learning.restrauntdomaincore.events.OrderApprovalEvent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,10 +19,8 @@ public class RestrauntApprovalRequestMessageListenerImpl implements RestrauntApp
 
 	@Override
 	public void approveOrder(RestrauntApprovalRequest restrauntApprovalRequest) {
-		OrderApprovalEvent persistOrderApproval = restrauntApprovalRequestHelper
-				.persistOrderApproval(restrauntApprovalRequest);
+		restrauntApprovalRequestHelper.persistOrderApproval(restrauntApprovalRequest);
 
-		persistOrderApproval.fire();
 	}
 
 }

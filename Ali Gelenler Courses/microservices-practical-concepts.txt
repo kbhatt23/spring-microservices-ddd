@@ -235,3 +235,55 @@ om shree sita rama lakshman hanuman
  as scheduler from another instance might pick it and run it and cause idempotency issues
  so use optimistic locks to be safe from these concurrency issues
  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman 
+
+- Instead of having one single table with hige data we can have multiple tables with smaller data
+  this improves performance
+  that is why we do purging -> 
+  we move the data from main table(getting large and query select * query will cause performance issue)
+  to another table or delete it ,
+
+- In outbox pattern we create one scheduler that queries data send to kafka and in callback update the status
+  and in cleanup scheduler we remove this data, so that main scheduler is more efficienct
+  this cleanup scheduler will run less freequently and clears the bad status data either deletes it or move to another table
+  this way our main scheduler is fast and efficienct
+  
+  
+  om shree ganeshaya namah
+  om shree sita rama lakshman hanuman
+  
+- In Spring data jpa we can use @Version annotation for optimistic locking
+  in case of orderpaymentsaga multiple threads might consume and process the same
+  so we can have database based optimistic locking
+  explained scenario:
+  two threads enter the process method and query the database with jpa entity containing @Version field
+  and while doing the save method in jpa one of them saves it in db and update the version
+  other thread will automatically wait as save method will block it for same id field updates
+  now since in db version field is updated and in local thread this version is older this update will fail with optimisticexception
+  hence we are thread safe over the database level using optimistic locking
+  during optimisticexception if method is annotated with @Transactional every db transaction will be rolled back
+
+- Types of locking in databse level
+  a. pesimistic locking: it does locking for read and write level both
+  b. optimistic locking: it does not lockinf in read but while writing it do the locking
+
+- Downside of optimistic locking is that if there are too many idempotent items then too many rollback happens
+- Downside of pesimistic locking is that it will be slow for read adn write both but no rollback happens
+
+  so in case of less collisions optimistic locking performs better
+  another scenario to handle is isolation level,
+  based on db isolation level readcommitted or uncommitted the locking code behaves differently
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- In case of kafkalistener annotated method , if any exception is thrown kafka consumption and method execution is retried
+  so for any exception for which no retry shall happen should be try caught and no need to rethrow it, just log it
+  
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman  
+
+- Ways to handle concurrent data update/inserts
+a. inserts: use unique index key, for same key entry wont happen due to uniqueness
+b. optimistic locking: used for updates from multiple concurrent threads

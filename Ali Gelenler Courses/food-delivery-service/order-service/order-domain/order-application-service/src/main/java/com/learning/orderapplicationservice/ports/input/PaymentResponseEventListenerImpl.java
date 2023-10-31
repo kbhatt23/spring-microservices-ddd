@@ -6,7 +6,6 @@ import org.springframework.validation.annotation.Validated;
 import com.learning.commondomain.constants.CommonDomainConstants;
 import com.learning.orderapplicationservice.external.PaymentResponse;
 import com.learning.orderapplicationservice.saga.OrderPaymentSaga;
-import com.learning.orderservice.core.events.OrderPaidEvent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,10 +22,9 @@ public class PaymentResponseEventListenerImpl implements PaymentResponseEventLis
 
 	@Override
 	public void paymentApproved(PaymentResponse paymentResponse) {
-		OrderPaidEvent orderPaidEvent = orderPaymentSaga.process(paymentResponse);
+		orderPaymentSaga.process(paymentResponse);
 		
 		log.info("Publishing OrderPaidEvent for order id: {}", paymentResponse.getOrderId());
-		orderPaidEvent.fire();
 	}
 
 	@Override

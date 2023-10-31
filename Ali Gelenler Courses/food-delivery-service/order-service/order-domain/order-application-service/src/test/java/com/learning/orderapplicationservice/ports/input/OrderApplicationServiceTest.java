@@ -1,11 +1,13 @@
 package com.learning.orderapplicationservice.ports.input;
 
+import static org.hamcrest.CoreMatchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,18 +20,24 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learning.commondomain.valueobjects.CustomerId;
 import com.learning.commondomain.valueobjects.Money;
 import com.learning.commondomain.valueobjects.OrderId;
 import com.learning.commondomain.valueobjects.OrderStatus;
+import com.learning.commondomain.valueobjects.PaymentOrderStatus;
 import com.learning.commondomain.valueobjects.ProductId;
 import com.learning.commondomain.valueobjects.RestrauntId;
 import com.learning.orderapplicationservice.commands.CreateOrderCommand;
 import com.learning.orderapplicationservice.commands.OrderAddress;
 import com.learning.orderapplicationservice.commands.OrderItemCommand;
 import com.learning.orderapplicationservice.mapper.OrderMapper;
+import com.learning.orderapplicationservice.oubox.model.OrderPaymentEventPayload;
+import com.learning.orderapplicationservice.oubox.model.OrderPaymentOutboxMessage;
 import com.learning.orderapplicationservice.ports.output.CustomerRepository;
 import com.learning.orderapplicationservice.ports.output.OrderRepository;
+import com.learning.orderapplicationservice.ports.output.PaymentOutboxRepository;
 import com.learning.orderapplicationservice.ports.output.RestrauntRepository;
 import com.learning.orderapplicationservice.response.CreateOrderResponse;
 import com.learning.orderservice.core.entities.Customer;
@@ -37,6 +45,9 @@ import com.learning.orderservice.core.entities.Order;
 import com.learning.orderservice.core.entities.Product;
 import com.learning.orderservice.core.entities.Restraunt;
 import com.learning.orderservice.core.exceptions.OrderDomainException;
+import com.learning.outbox.OutboxStatus;
+import com.learning.saga.SagaStatus;
+import com.learning.saga.constants.SagaConstants;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(classes = OrderTestConfiguration.class)
@@ -57,9 +68,16 @@ public class OrderApplicationServiceTest {
 	@Autowired
 	private RestrauntRepository restaurantRepository;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Autowired
+	private PaymentOutboxRepository paymentOutboxRepository;
+
 	private CreateOrderCommand createOrderCommand;
 	private CreateOrderCommand createOrderCommandWrongPrice;
 	private CreateOrderCommand createOrderCommandWrongProductPrice;
+
 	private final UUID CUSTOMER_ID = UUID.fromString("d215b5f8-0249-4dc5-89a3-51fd148cfb41");
 	private final UUID RESTAURANT_ID = UUID.fromString("d215b5f8-0249-4dc5-89a3-51fd148cfb45");
 	private final UUID PRODUCT_ID = UUID.fromString("d215b5f8-0249-4dc5-89a3-51fd148cfb48");
@@ -76,8 +94,8 @@ public class OrderApplicationServiceTest {
 				.orderItems(List.of(
 						OrderItemCommand.builder().productId(PRODUCT_ID).quantity(1).unitPrice(new BigDecimal("50.00"))
 								.totalPrice(new BigDecimal("50.00")).build(),
-						OrderItemCommand.builder().productId(PRODUCT_ID_2).quantity(3).unitPrice(new BigDecimal("50.00"))
-								.totalPrice(new BigDecimal("150.00")).build()))
+						OrderItemCommand.builder().productId(PRODUCT_ID_2).quantity(3)
+								.unitPrice(new BigDecimal("50.00")).totalPrice(new BigDecimal("150.00")).build()))
 				.build();
 
 		createOrderCommandWrongPrice = CreateOrderCommand.builder().customerId(CUSTOMER_ID).restrauntId(RESTAURANT_ID)
@@ -86,8 +104,8 @@ public class OrderApplicationServiceTest {
 				.orderItems(List.of(
 						OrderItemCommand.builder().productId(PRODUCT_ID).quantity(1).unitPrice(new BigDecimal("50.00"))
 								.totalPrice(new BigDecimal("50.00")).build(),
-						OrderItemCommand.builder().productId(PRODUCT_ID_2).quantity(3).unitPrice(new BigDecimal("50.00"))
-								.totalPrice(new BigDecimal("150.00")).build()))
+						OrderItemCommand.builder().productId(PRODUCT_ID_2).quantity(3)
+								.unitPrice(new BigDecimal("50.00")).totalPrice(new BigDecimal("150.00")).build()))
 				.build();
 
 		createOrderCommandWrongProductPrice = CreateOrderCommand.builder().customerId(CUSTOMER_ID)
@@ -97,8 +115,8 @@ public class OrderApplicationServiceTest {
 				.orderItems(List.of(
 						OrderItemCommand.builder().productId(PRODUCT_ID).quantity(1).unitPrice(new BigDecimal("60.00"))
 								.totalPrice(new BigDecimal("60.00")).build(),
-						OrderItemCommand.builder().productId(PRODUCT_ID_2).quantity(3).unitPrice(new BigDecimal("50.00"))
-								.totalPrice(new BigDecimal("150.00")).build()))
+						OrderItemCommand.builder().productId(PRODUCT_ID_2).quantity(3)
+								.unitPrice(new BigDecimal("50.00")).totalPrice(new BigDecimal("150.00")).build()))
 				.build();
 
 		Customer customer = new Customer(new CustomerId(CUSTOMER_ID), null);
@@ -119,6 +137,8 @@ public class OrderApplicationServiceTest {
 				.findRestaurantInformation(orderDataMapper.getRestrauntFromCreateOrderCommand(createOrderCommand)))
 						.thenReturn(Optional.of(restaurantResponse));
 		when(orderRepository.save(Mockito.any(Order.class))).thenReturn(order);
+		when(paymentOutboxRepository.save(Mockito.any(OrderPaymentOutboxMessage.class)))
+				.thenReturn(getOrderPaymentOutboxMessage());
 	}
 
 	@Test
@@ -154,7 +174,7 @@ public class OrderApplicationServiceTest {
 
 		Restraunt restaurantResponse = new Restraunt(new RestrauntId(createOrderCommand.getRestrauntId()), productMap,
 				false);
-		
+
 		when(restaurantRepository
 				.findRestaurantInformation(orderDataMapper.getRestrauntFromCreateOrderCommand(createOrderCommand)))
 						.thenReturn(Optional.of(restaurantResponse));
@@ -162,5 +182,24 @@ public class OrderApplicationServiceTest {
 				() -> orderApplicationService.createOrder(createOrderCommand));
 		assertEquals("Restaurant with id " + RESTAURANT_ID + " is currently not active!",
 				orderDomainException.getMessage());
+	}
+
+	private OrderPaymentOutboxMessage getOrderPaymentOutboxMessage() {
+		OrderPaymentEventPayload orderPaymentEventPayload = OrderPaymentEventPayload.builder()
+				.orderId(ORDER_ID.toString()).customerId(CUSTOMER_ID.toString()).price(PRICE)
+				.createdAt(ZonedDateTime.now()).paymentOrderStatus(PaymentOrderStatus.PENDING.name()).build();
+
+		return OrderPaymentOutboxMessage.builder().id(UUID.randomUUID()).sagaId(SAGA_ID).createdAt(ZonedDateTime.now())
+				.type(SagaConstants.ORDER_SAGA_NAME).payload(createPayload(orderPaymentEventPayload))
+				.orderStatus(OrderStatus.PENDING).sagaStatus(SagaStatus.STARTED).outboxStatus(OutboxStatus.STARTED)
+				.version(0).build();
+	}
+
+	private String createPayload(OrderPaymentEventPayload orderPaymentEventPayload) {
+		try {
+			return objectMapper.writeValueAsString(orderPaymentEventPayload);
+		} catch (JsonProcessingException e) {
+			throw new OrderDomainException("Cannot create OrderPaymentEventPayload object!");
+		}
 	}
 }

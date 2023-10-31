@@ -10,9 +10,11 @@ import com.learning.commondomain.valueobjects.OrderId;
 import com.learning.commondomain.valueobjects.OrderStatus;
 import com.learning.commondomain.valueobjects.RestrauntId;
 import com.learning.restrauntapplicationservice.dto.RestrauntApprovalRequest;
+import com.learning.restrauntapplicationservice.outbox.model.OrderEventPayload;
 import com.learning.restrauntdomaincore.entities.OrderDetail;
 import com.learning.restrauntdomaincore.entities.Product;
 import com.learning.restrauntdomaincore.entities.Restraunt;
+import com.learning.restrauntdomaincore.events.OrderApprovalEvent;
 
 @Component
 public class RestrauntMapper {
@@ -29,6 +31,15 @@ public class RestrauntMapper {
 				restrauntApprovalRequest.getProducts().stream()
 						.map(productReq -> new Product(productReq.getId(), null, null, productReq.getQuantity(), false))
 						.collect(Collectors.toList()));
+	}
+
+	public OrderEventPayload orderApprovalEventToOrderEventPayload(OrderApprovalEvent orderApprovalEvent) {
+		return OrderEventPayload.builder()
+				.orderId(orderApprovalEvent.getOrderApproval().getOrderId().getValue().toString())
+				.restaurantId(orderApprovalEvent.getRestrauntId().getValue().toString())
+				.orderApprovalStatus(orderApprovalEvent.getOrderApproval().getOrderApprovalStatus().name())
+				.createdAt(orderApprovalEvent.getCreatedAt()).failureMessages(orderApprovalEvent.getFailureMessages())
+				.build();
 	}
 
 }

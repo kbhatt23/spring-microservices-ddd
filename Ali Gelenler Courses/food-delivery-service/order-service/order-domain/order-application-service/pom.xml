@@ -12,10 +12,6 @@
 	<description>order application service</description>
 
 	<dependencies>
-		<!-- <dependency> <groupId>com.food.ordering.system</groupId> <artifactId>saga</artifactId> 
-			</dependency> -->
-		<!-- <dependency> <groupId>com.food.ordering.system</groupId> <artifactId>outbox</artifactId> 
-			</dependency> -->
 		<dependency>
 			<groupId>com.learning</groupId>
 			<artifactId>order-domain-core</artifactId>
@@ -49,6 +45,10 @@
 		<dependency>
 			<groupId>com.learning</groupId>
 			<artifactId>saga</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.learning</groupId>
+			<artifactId>outbox</artifactId>
 		</dependency>
 	</dependencies>
 </project>

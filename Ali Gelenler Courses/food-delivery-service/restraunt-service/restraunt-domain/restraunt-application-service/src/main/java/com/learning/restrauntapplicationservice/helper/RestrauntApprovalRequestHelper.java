@@ -2,17 +2,20 @@ package com.learning.restrauntapplicationservice.helper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.learning.commondomain.valueobjects.OrderId;
+import com.learning.outbox.OutboxStatus;
 import com.learning.restrauntapplicationservice.dto.RestrauntApprovalRequest;
 import com.learning.restrauntapplicationservice.mapper.RestrauntMapper;
+import com.learning.restrauntapplicationservice.outbox.model.OrderOutboxMessage;
+import com.learning.restrauntapplicationservice.outbox.scheduler.OrderOutboxHelper;
 import com.learning.restrauntapplicationservice.output.OrderApprovalRepository;
-import com.learning.restrauntapplicationservice.output.OrderApprovedMessagePublisher;
-import com.learning.restrauntapplicationservice.output.OrderRejectedMessagePublisher;
+import com.learning.restrauntapplicationservice.output.RestrauntApprovalResponseMessagePublisher;
 import com.learning.restrauntapplicationservice.output.RestrauntRepository;
 import com.learning.restrauntdomaincore.entities.Restraunt;
 import com.learning.restrauntdomaincore.events.OrderApprovalEvent;
@@ -29,39 +32,48 @@ public class RestrauntApprovalRequestHelper {
 
 	private final RestrauntMapper restrauntMapper;
 
-	private final OrderApprovedMessagePublisher orderApprovedMessagePublisher;
-
-	private final OrderRejectedMessagePublisher orderRejectedMessagePublisher;
-
 	private final RestrauntRepository restrauntRepository;
 
 	private final OrderApprovalRepository orderApprovalRepository;
 
+	private final OrderOutboxHelper orderOutboxHelper;
+
+	private final RestrauntApprovalResponseMessagePublisher restaurantApprovalResponseMessagePublisher;
+
 	public RestrauntApprovalRequestHelper(RestrauntDomainService restrauntDomainService,
-			RestrauntMapper restrauntMapper, OrderApprovedMessagePublisher orderApprovedMessagePublisher,
-			OrderRejectedMessagePublisher orderRejectedMessagePublisher, RestrauntRepository restrauntRepository,
-			OrderApprovalRepository orderApprovalRepository) {
+			RestrauntMapper restrauntMapper, RestrauntRepository restrauntRepository,
+			OrderApprovalRepository orderApprovalRepository, OrderOutboxHelper orderOutboxHelper,
+			RestrauntApprovalResponseMessagePublisher restaurantApprovalResponseMessagePublisher) {
 		this.restrauntDomainService = restrauntDomainService;
 		this.restrauntMapper = restrauntMapper;
-		this.orderApprovedMessagePublisher = orderApprovedMessagePublisher;
-		this.orderRejectedMessagePublisher = orderRejectedMessagePublisher;
 		this.restrauntRepository = restrauntRepository;
 		this.orderApprovalRepository = orderApprovalRepository;
+		this.orderOutboxHelper = orderOutboxHelper;
+		this.restaurantApprovalResponseMessagePublisher = restaurantApprovalResponseMessagePublisher;
 	}
 
 	@Transactional
-	public OrderApprovalEvent persistOrderApproval(RestrauntApprovalRequest restrauntApprovalRequest) {
+	public void persistOrderApproval(RestrauntApprovalRequest restrauntApprovalRequest) {
+		if (publishIfOutboxMessageProcessed(restrauntApprovalRequest)) {
+			log.info("An outbox message with saga id: {} already saved to database!",
+					restrauntApprovalRequest.getSagaId());
+			return;
+		}
+
 		log.info("Processing restaurant approval for order id: {}", restrauntApprovalRequest.getOrderId());
 		Restraunt restraunt = findRestraunt(restrauntApprovalRequest);
 
 		List<String> failureMessages = new ArrayList<>();
 
-		OrderApprovalEvent orderApprovalEvent = restrauntDomainService.validateOrder(restraunt, failureMessages,
-				orderApprovedMessagePublisher, orderRejectedMessagePublisher);
+		OrderApprovalEvent orderApprovalEvent = restrauntDomainService.validateOrder(restraunt, failureMessages);
 
 		orderApprovalRepository.save(restraunt.getOrderApproval());
 
-		return orderApprovalEvent;
+		orderOutboxHelper.saveOrderOutboxMessage(
+				restrauntMapper.orderApprovalEventToOrderEventPayload(orderApprovalEvent),
+				orderApprovalEvent.getOrderApproval().getOrderApprovalStatus(), OutboxStatus.STARTED,
+				UUID.fromString(restrauntApprovalRequest.getSagaId()));
+
 	}
 
 	private Restraunt findRestraunt(RestrauntApprovalRequest restrauntApprovalRequest) {
@@ -85,4 +97,15 @@ public class RestrauntApprovalRequestHelper {
 		return restraunt;
 	}
 
+	private boolean publishIfOutboxMessageProcessed(RestrauntApprovalRequest restaurantApprovalRequest) {
+		Optional<OrderOutboxMessage> orderOutboxMessage = orderOutboxHelper
+				.getCompletedOrderOutboxMessageBySagaIdAndOutboxStatus(
+						UUID.fromString(restaurantApprovalRequest.getSagaId()), OutboxStatus.COMPLETED);
+		if (orderOutboxMessage.isPresent()) {
+			restaurantApprovalResponseMessagePublisher.publish(orderOutboxMessage.get(),
+					orderOutboxHelper::updateOutboxStatus);
+			return true;
+		}
+		return false;
+	}
 }

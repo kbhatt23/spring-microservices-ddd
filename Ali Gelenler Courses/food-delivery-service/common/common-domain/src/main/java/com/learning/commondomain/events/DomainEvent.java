@@ -4,5 +4,4 @@ package com.learning.commondomain.events;
 //T represents the type of entity for which state change cause this event
 public interface DomainEvent<T> {
 
-	void fire();
 }

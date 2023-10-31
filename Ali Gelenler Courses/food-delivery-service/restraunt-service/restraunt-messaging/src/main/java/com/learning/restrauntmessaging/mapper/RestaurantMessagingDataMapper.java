@@ -11,6 +11,7 @@ import com.learning.kafkamodel.order.OrderApprovalStatus;
 import com.learning.kafkamodel.order.RestaurantApprovalRequestAvroModel;
 import com.learning.kafkamodel.order.RestaurantApprovalResponseAvroModel;
 import com.learning.restrauntapplicationservice.dto.RestrauntApprovalRequest;
+import com.learning.restrauntapplicationservice.outbox.model.OrderEventPayload;
 import com.learning.restrauntdomaincore.entities.Product;
 import com.learning.restrauntdomaincore.events.OrderApprovedEvent;
 import com.learning.restrauntdomaincore.events.OrderRejectedEvent;
@@ -63,5 +64,18 @@ public class RestaurantMessagingDataMapper {
 	                .createdAt(restaurantApprovalRequestAvroModel.getCreatedAt())
 	                .build();
 	    }
+
+	public RestaurantApprovalResponseAvroModel orderEventPayloadToRestaurantApprovalResponseAvroModel(String sagaId,
+			OrderEventPayload orderEventPayload) {
+		 return RestaurantApprovalResponseAvroModel.newBuilder()
+	                .setId(UUID.randomUUID().toString())
+	                .setSagaId(sagaId)
+	                .setOrderId(orderEventPayload.getOrderId())
+	                .setRestaurantId(orderEventPayload.getRestaurantId())
+	                .setCreatedAt(orderEventPayload.getCreatedAt().toInstant())
+	                .setOrderApprovalStatus(OrderApprovalStatus.valueOf(orderEventPayload.getOrderApprovalStatus()))
+	                .setFailureMessages(orderEventPayload.getFailureMessages())
+	                .build();
+	}
 
 }

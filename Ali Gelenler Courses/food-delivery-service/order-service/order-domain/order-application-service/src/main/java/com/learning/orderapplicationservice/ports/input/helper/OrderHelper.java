@@ -43,12 +43,12 @@ public class OrderHelper {
 	}
 	
 	@Transactional
-	public OrderCreatedEvent persistOrder(CreateOrderCommand createOrderCommand, DomainEventPublisher<OrderCreatedEvent> publisher) {
+	public OrderCreatedEvent persistOrder(CreateOrderCommand createOrderCommand) {
 		checkCustomer(createOrderCommand.getCustomerId());
 		Restraunt restraunt = fetchValidRestraunt(createOrderCommand);
 		Order order = orderMapper.createOrderFromOrderCommand(createOrderCommand);
 
-		OrderCreatedEvent validateAndInitializeOrder = orderDomainService.validateAndInitializeOrder(order, restraunt,publisher);
+		OrderCreatedEvent validateAndInitializeOrder = orderDomainService.validateAndInitializeOrder(order, restraunt);
 
 		saveOrder(order);
 		log.info("persistOrder: order created with id: "+validateAndInitializeOrder.getOrder().getId().getValue());

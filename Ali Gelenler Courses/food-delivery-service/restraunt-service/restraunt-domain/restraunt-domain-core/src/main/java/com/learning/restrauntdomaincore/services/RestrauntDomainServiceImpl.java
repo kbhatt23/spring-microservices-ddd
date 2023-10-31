@@ -5,7 +5,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import com.learning.commondomain.constants.CommonDomainConstants;
-import com.learning.commondomain.events.publisher.DomainEventPublisher;
 import com.learning.commondomain.valueobjects.OrderApprovalStatus;
 import com.learning.restrauntdomaincore.entities.Restraunt;
 import com.learning.restrauntdomaincore.events.OrderApprovalEvent;
@@ -18,9 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RestrauntDomainServiceImpl implements RestrauntDomainService {
 
 	@Override
-	public OrderApprovalEvent validateOrder(Restraunt restraunt, List<String> failureMessages,
-			DomainEventPublisher<OrderApprovedEvent> orderApprovedEventPublisher,
-			DomainEventPublisher<OrderRejectedEvent> orderRejectedEventPublisher) {
+	public OrderApprovalEvent validateOrder(Restraunt restraunt, List<String> failureMessages) {
 		log.info("Validating order with id: {}", restraunt.getOrderDetail().getId().getValue());
 		restraunt.validateOrder(failureMessages);
 
@@ -30,12 +27,12 @@ public class RestrauntDomainServiceImpl implements RestrauntDomainService {
 			log.info("Order is approved for order id: {}", restraunt.getOrderDetail().getId().getValue());
 			restraunt.constructOrderApproval(OrderApprovalStatus.APPROVED);
 			orderApprovalEvent = new OrderApprovedEvent(restraunt.getOrderApproval(), restraunt.getId(),
-					failureMessages, currentZonedDateTime, orderApprovedEventPublisher);
+					failureMessages, currentZonedDateTime);
 		} else {
 			log.info("Order is rejected for order id: {}", restraunt.getOrderDetail().getId().getValue());
 			restraunt.constructOrderApproval(OrderApprovalStatus.REJECTED);
 			orderApprovalEvent = new OrderRejectedEvent(restraunt.getOrderApproval(), restraunt.getId(),
-					failureMessages, currentZonedDateTime, orderRejectedEventPublisher);
+					failureMessages, currentZonedDateTime);
 		}
 
 		return orderApprovalEvent;
