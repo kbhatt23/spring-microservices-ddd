@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "customer_order_m_view", schema = "customer")
+@Table(name = "customers")
 @Setter
 @Getter
 @NoArgsConstructor
@@ -21,8 +21,12 @@ public class CustomerEntity {
 
 	@Id
 	private UUID id;
-	
+
 	private String userName;
+
+	private String firstName;
+
+	private String lastName;
 
 	@Override
 	public int hashCode() {

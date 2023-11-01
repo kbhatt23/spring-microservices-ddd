@@ -11,13 +11,13 @@ public class CustomerDataAccessMapper {
 
 	public CustomerEntity createCustomerEntityFromCustomerDomain(Customer customer) {
 		return new CustomerEntity(customer.getId().getValue(),
-				customer.getUserName()
+				customer.getUserName(), customer.getFirstName(), customer.getLastName()
 				);
 	}
 	
 	public Customer createCustomerDomainFromCustomerEntity(CustomerEntity customerEntity) {
 		return new Customer(new CustomerId(customerEntity.getId()), 
-				 customerEntity.getUserName()
+				 customerEntity.getUserName(), customerEntity.getFirstName(), customerEntity.getLastName()
 				);
 	}
 }

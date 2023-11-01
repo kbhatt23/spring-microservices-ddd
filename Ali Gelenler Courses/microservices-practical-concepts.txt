@@ -287,3 +287,22 @@ om shree sita rama lakshman hanuman
 - Ways to handle concurrent data update/inserts
 a. inserts: use unique index key, for same key entry wont happen due to uniqueness
 b. optimistic locking: used for updates from multiple concurrent threads
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- CQRS means Command Query Responsiblity seggregation
+  -> Create different modulef or read and write applications
+  -> freedom to choose tech stack like programming language, DB, DB table structure etc seperate for read adn write systems
+  -> can scale read adn write application seperately
+  -> more resilliency: if read application fails write application still works
+  -> better scaling
+  -<> eventual consistency though
+  
+- Typically eventual consistency is side effect of distributed systems that increases scale
+- in write application we store data based on event store: all actions are inserted as rows in term of event
+  in read application we store the final flattened result for fast query,
+  also since wite db store all the events we can always play all the events to get the final result in case of data loss in read application
+  meaning replaying helps in case of disaster recovery and adds resiliency to overall system  
+  
+- Even in CQRS pattern implementation we should use outbox pattern for high consistency  

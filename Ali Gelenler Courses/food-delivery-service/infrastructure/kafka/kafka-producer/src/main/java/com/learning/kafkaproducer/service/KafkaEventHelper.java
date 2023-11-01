@@ -39,7 +39,8 @@ public class KafkaEventHelper {
 						eventType, recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset(),
 						recordMetadata.timestamp(), modelEvent);
 
-				outboxCallback.accept(outboxMessage, OutboxStatus.COMPLETED);
+				if(outboxCallback != null && outboxMessage != null)
+					outboxCallback.accept(outboxMessage, OutboxStatus.COMPLETED);
 			}
 
 			@Override
@@ -47,7 +48,8 @@ public class KafkaEventHelper {
 				log.error("callBack: unable to send eventType: {} to topic: {}, with error:{}, with event: {}",
 						eventType, topicName, ex, modelEvent);
 
-				outboxCallback.accept(outboxMessage, OutboxStatus.FAILED);
+				if(outboxCallback != null && outboxMessage != null)
+					outboxCallback.accept(outboxMessage, OutboxStatus.FAILED);
 			}
 
 		};

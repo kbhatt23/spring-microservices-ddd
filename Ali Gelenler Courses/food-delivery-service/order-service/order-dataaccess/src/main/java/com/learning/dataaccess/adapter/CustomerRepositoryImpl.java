@@ -3,6 +3,8 @@ package com.learning.dataaccess.adapter;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import com.learning.dataaccess.entity.CustomerEntity;
@@ -20,7 +22,6 @@ public class CustomerRepositoryImpl implements CustomerRepository {
 	
 	public CustomerRepositoryImpl(CustomerDataAccessMapper customerDataAccessMapper,
 			CustomerJPARepository customerJPARepository) {
-		super();
 		this.customerDataAccessMapper = customerDataAccessMapper;
 		this.customerJPARepository = customerJPARepository;
 	}
@@ -31,6 +32,7 @@ public class CustomerRepositoryImpl implements CustomerRepository {
 		                     .map(customerDataAccessMapper :: createCustomerDomainFromCustomerEntity);
 	}
 
+	@Transactional
 	@Override
 	public Customer save(Customer customer) {
 		CustomerEntity savedCustomerEntity = customerJPARepository.save(customerDataAccessMapper.createCustomerEntityFromCustomerDomain(customer));

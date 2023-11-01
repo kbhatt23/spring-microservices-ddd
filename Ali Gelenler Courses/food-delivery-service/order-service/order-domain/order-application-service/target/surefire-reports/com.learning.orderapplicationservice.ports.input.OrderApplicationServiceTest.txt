@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.learning.orderapplicationservice.ports.input.OrderApplicationServiceTest
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.612 s - in com.learning.orderapplicationservice.ports.input.OrderApplicationServiceTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.368 s - in com.learning.orderapplicationservice.ports.input.OrderApplicationServiceTest

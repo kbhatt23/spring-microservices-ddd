@@ -16,11 +16,13 @@ import com.learning.commondomain.valueobjects.RestrauntId;
 import com.learning.orderapplicationservice.commands.CreateOrderCommand;
 import com.learning.orderapplicationservice.commands.OrderAddress;
 import com.learning.orderapplicationservice.commands.OrderItemCommand;
+import com.learning.orderapplicationservice.oubox.model.CustomerModel;
 import com.learning.orderapplicationservice.oubox.model.OrderApprovalEventPayload;
 import com.learning.orderapplicationservice.oubox.model.OrderApprovalEventProduct;
 import com.learning.orderapplicationservice.oubox.model.OrderPaymentEventPayload;
 import com.learning.orderapplicationservice.response.CreateOrderResponse;
 import com.learning.orderapplicationservice.response.TrackOrderResponse;
+import com.learning.orderservice.core.entities.Customer;
 import com.learning.orderservice.core.entities.Order;
 import com.learning.orderservice.core.entities.OrderItem;
 import com.learning.orderservice.core.entities.Product;
@@ -102,5 +104,10 @@ public class OrderMapper {
 				.price(orderCancelledEvent.getOrder().getPrice().getAmount())
 				.createdAt(orderCancelledEvent.getCreatedAt()).paymentOrderStatus(PaymentOrderStatus.CANCELLED.name())
 				.build();
+	}
+
+	public Customer customerModelToCustomer(CustomerModel customerModel) {
+		return new Customer(new CustomerId(UUID.fromString(customerModel.getId())), customerModel.getUserName(),
+				customerModel.getFirstName(), customerModel.getLastName());
 	}
 }

@@ -119,7 +119,7 @@ public class OrderApplicationServiceTest {
 								.unitPrice(new BigDecimal("50.00")).totalPrice(new BigDecimal("150.00")).build()))
 				.build();
 
-		Customer customer = new Customer(new CustomerId(CUSTOMER_ID), null);
+		Customer customer = new Customer(new CustomerId(CUSTOMER_ID), null, null , null);
 
 		Map<ProductId, Product> productMap = Map.of(new ProductId(PRODUCT_ID),
 				new Product(new ProductId(PRODUCT_ID), "product-1", new Money(new BigDecimal("50.00"))),
