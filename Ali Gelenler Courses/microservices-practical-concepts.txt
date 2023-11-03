@@ -294,7 +294,7 @@ om shree sita rama lakshman hanuman
 - CQRS means Command Query Responsiblity seggregation
   -> Create different modulef or read and write applications
   -> freedom to choose tech stack like programming language, DB, DB table structure etc seperate for read adn write systems
-  -> can scale read adn write application seperately
+  -> can scale read and write application seperately
   -> more resilliency: if read application fails write application still works
   -> better scaling
   -<> eventual consistency though
@@ -305,4 +305,37 @@ om shree sita rama lakshman hanuman
   also since wite db store all the events we can always play all the events to get the final result in case of data loss in read application
   meaning replaying helps in case of disaster recovery and adds resiliency to overall system  
   
-- Even in CQRS pattern implementation we should use outbox pattern for high consistency  
+- Even in CQRS pattern implementation we should use outbox pattern for high consistency
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- Docker desktop is free for personal use,
+  but if using for commercial purpose using docker desktop require license
+  
+- Note: while using maven plugins to generate the docker image ensure below
+  the maven compiler jdk version and dockerfile version of jdk is either same or compatible
+  meaning the maven compiler uses same/compatible jdk version to generate jar,
+  and docker container jdk versions is also same/compatible
+  
+- To be able to push docker image from local to another repository like google cloud container repo or AWS ECR
+  we need to tag the docker image in the format of these repository provider
+  then using docker image push command automatically it goes to these repository instead of docker hub  
+
+- In case we have created configuration in application.yml or properties and used in java code using @Value or @ConfigurationProperties
+  it is not mandatory to have default values using ${} and pass this argument in k8s or docker compose
+  there is a nomencalature and we can pass it directly 
+eg: spring.datasource.url can be passed as SPRING_DATASOURCE_URL  
+
+- After upgrading to spring boot > 2.7.5 avro supports uuid directly and do not need logicaltyppe field also to be added
+  for older version we need to set type="uuid" and logicaltyppe="string" and avro generated class contaqin string field
+  however after the upgrade the new avro version supports uuid java data type and hence no need to add logicaltyppe as string  
+
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman  
+
+- Changes done to upgrade to spring boot 2.7.5
+a. remove logicaltyppe as uuid from all avro and keep them string: avro upgrade removed this supported
+b. update header in kafkalistener for headers like keys and partitions as these constants were deprecated
+c. update application.yml file for init-schema and init-data sql files
+   application properties were updated by spring OOB
