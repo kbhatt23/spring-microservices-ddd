@@ -1,6 +1,6 @@
 package com.learning.orderapplicationservice.ports.input;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import com.learning.orderapplicationservice.commands.CreateOrderCommand;
 import com.learning.orderapplicationservice.queries.TrackOrderQuery;

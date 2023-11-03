@@ -1,13 +1,13 @@
 package com.learning.kafkaproducer.service;
 
 import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import com.learning.kafkaproducer.exception.KafkaProducerException;
 
@@ -24,10 +24,10 @@ public class KafkaProducerImpl<K extends Serializable, V extends SpecificRecordB
 	}
 
 	@Override
-	public void publish(String topicName, K key, V message, ListenableFutureCallback<SendResult<K, V>> callBack) {
+	public void publish(String topicName, K key, V message, BiConsumer<SendResult<K, V>, Throwable> callback) {
 		try {
-			ListenableFuture<SendResult<K, V>> future = kafkaTemplate.send(topicName, key, message);
-			future.addCallback(callBack);
+			CompletableFuture<SendResult<K, V>> kafkaResultFuture = kafkaTemplate.send(topicName, key, message);
+			kafkaResultFuture.whenComplete(callback);
 		} catch (Exception e) {
 			log.error("Error on kafka producer with key: {}, message: {} and exception: {}", key, message,
 					e.getMessage());

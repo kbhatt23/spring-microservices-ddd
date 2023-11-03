@@ -25,13 +25,12 @@ public class KafkaEventHelper {
 		this.objectMapper = objectMapper;
 	}
 
-	public <T, U> ListenableFutureCallback<SendResult<String, T>> callBack(String topicName, T modelEvent,
+	public <T, U> BiConsumer<SendResult<String, T>, Throwable> callBack(String topicName, T modelEvent,
 			String eventType, U outboxMessage, BiConsumer<U, OutboxStatus> outboxCallback) {
 
-		return new ListenableFutureCallback<SendResult<String, T>>() {
+		return (result, ex) -> {
 
-			@Override
-			public void onSuccess(SendResult<String, T> result) {
+			if (ex == null) {
 				RecordMetadata recordMetadata = result.getRecordMetadata();
 				log.info(
 						"callBack: succesfully sent eventType: {} to topic: {}, partition: {},"
@@ -39,16 +38,13 @@ public class KafkaEventHelper {
 						eventType, recordMetadata.topic(), recordMetadata.partition(), recordMetadata.offset(),
 						recordMetadata.timestamp(), modelEvent);
 
-				if(outboxCallback != null && outboxMessage != null)
+				if (outboxCallback != null && outboxMessage != null)
 					outboxCallback.accept(outboxMessage, OutboxStatus.COMPLETED);
-			}
-
-			@Override
-			public void onFailure(Throwable ex) {
+			} else {
 				log.error("callBack: unable to send eventType: {} to topic: {}, with error:{}, with event: {}",
 						eventType, topicName, ex, modelEvent);
 
-				if(outboxCallback != null && outboxMessage != null)
+				if (outboxCallback != null && outboxMessage != null)
 					outboxCallback.accept(outboxMessage, OutboxStatus.FAILED);
 			}
 

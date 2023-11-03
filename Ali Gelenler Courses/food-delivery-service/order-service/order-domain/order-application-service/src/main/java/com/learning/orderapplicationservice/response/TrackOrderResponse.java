@@ -3,7 +3,7 @@ package com.learning.orderapplicationservice.response;
 import java.util.List;
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import com.learning.commondomain.valueobjects.OrderStatus;
 
