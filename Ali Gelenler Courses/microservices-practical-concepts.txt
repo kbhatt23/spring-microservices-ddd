@@ -339,3 +339,21 @@ a. remove logicaltyppe as uuid from all avro and keep them string: avro upgrade 
 b. update header in kafkalistener for headers like keys and partitions as these constants were deprecated
 c. update application.yml file for init-schema and init-data sql files
    application properties were updated by spring OOB
+   
+om shree ganeshaya namah
+om shree sita rama lakshman hanuman
+
+- Change Data Capture is another approach to be used in outbox pattern
+  as an alternative to schedulers that pulls the data from outbox table and push the data to kafka event source
+  Change Data Capture is more real time as scheudler generally waits for next schedule to push the data to kafka
+
+- Change Data Capture approach reads the transactional logs form the db and autoamtically insert event in kafka
+  eg in postgres db we have write ahead log file, it reads these files and send event to kafka
+ Steps:
+ -> postgres writes WAL file log for each event: like insert,delete etc
+ -> for each of these operations log file is appended and it is read and sent to kafka according to configuration
+   hence it is faster than scheduler pull approach
+   we can use debezium kafka conncetor to read these WAL files and push event to kafka
+   debezium is an open source platform and free to use in production with no license
+   we will use debezium kafka conncetor docker image to read postgres WAL log file and push to kafka as kafka conncetor
+  
